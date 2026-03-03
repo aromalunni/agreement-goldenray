@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Golden Ray – Agreement System</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Noto+Sans+Malayalam:wght@400;500;600;700&family=Noto+Serif:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{
+  --bg:#f5f7fb;--sidebar:#1e3a5f;--sidebar2:#16304f;--accent:#f59e0b;
+  --accent2:#ef4444;--card:#ffffff;--border:#e2e8f0;--text:#0f172a;
+  --muted:#64748b;--green:#16a34a;--red:#dc2626;
+  --shadow:0 1px 4px rgba(0,0,0,.08);--shadow-lg:0 8px 32px rgba(0,0,0,.12);
+  --font:'DM Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;}
+button{font-family:var(--font);cursor:pointer;}
+input,select,textarea{font-family:var(--font);}
+
+/* ─── TOAST ─── */
+#toast{
+  position:fixed;bottom:28px;right:28px;z-index:9999;
+  background:#0f172a;color:white;padding:13px 22px;border-radius:10px;
+  font-size:14px;font-weight:500;box-shadow:var(--shadow-lg);
+  transform:translateY(80px);opacity:0;transition:.3s;pointer-events:none;
+}
+#toast.show{transform:translateY(0);opacity:1;}
+
+/* ─── LOGIN ─── */
+#login-screen{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;position:relative;overflow:hidden;
+  background:linear-gradient(180deg,#e8f4fd 0%,#d0ebf9 30%,#b8e0f5 50%,#a8d8ea 70%,#87ceeb 100%);
+}
+/* sun glow */
+#login-screen::before{
+  content:'';position:absolute;width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,200,0,.7) 0%,rgba(255,165,0,.3) 40%,transparent 70%);
+  top:30px;right:80px;box-shadow:0 0 80px 40px rgba(255,200,0,.25);
+  animation:sunPulse 4s ease-in-out infinite alternate;
+}
+/* grass hill */
+#login-screen::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:30vh;
+  background:linear-gradient(180deg,#4caf50 0%,#388e3c 30%,#2e7d32 100%);
+  border-radius:50% 50% 0 0 / 30% 30% 0 0;
+}
+/* grass texture overlay */
+.login-scene{position:absolute;inset:0;pointer-events:none;z-index:0;}
+.login-grass-detail{
+  position:absolute;bottom:0;left:0;right:0;height:28vh;z-index:1;
+  background:
+    repeating-linear-gradient(85deg,transparent,transparent 8px,rgba(56,142,60,.3) 8px,rgba(56,142,60,.3) 9px),
+    repeating-linear-gradient(95deg,transparent,transparent 12px,rgba(76,175,80,.2) 12px,rgba(76,175,80,.2) 13px);
+}
+/* clouds */
+.login-cloud{
+  position:absolute;background:white;border-radius:50px;opacity:.8;pointer-events:none;z-index:1;
+}
+.login-cloud::before,.login-cloud::after{
+  content:'';position:absolute;background:white;border-radius:50%;
+}
+.login-cloud-1{width:120px;height:36px;top:60px;left:10%;animation:cloudDrift 25s linear infinite;}
+.login-cloud-1::before{width:50px;height:50px;top:-25px;left:20px;}
+.login-cloud-1::after{width:36px;height:36px;top:-18px;left:58px;}
+.login-cloud-2{width:90px;height:28px;top:100px;left:50%;animation:cloudDrift 30s linear infinite;animation-delay:-10s;opacity:.6;}
+.login-cloud-2::before{width:40px;height:40px;top:-20px;left:15px;}
+.login-cloud-2::after{width:28px;height:28px;top:-14px;left:45px;}
+.login-cloud-3{width:100px;height:30px;top:40px;left:75%;animation:cloudDrift 22s linear infinite;animation-delay:-5s;opacity:.7;}
+.login-cloud-3::before{width:44px;height:44px;top:-22px;left:18px;}
+.login-cloud-3::after{width:32px;height:32px;top:-16px;left:52px;}
+/* solar panel on right */
+.login-panel-group{position:absolute;bottom:25vh;right:8%;z-index:2;pointer-events:none;}
+.login-panel{
+  width:180px;height:120px;background:linear-gradient(145deg,#1a237e 0%,#283593 30%,#1565c0 60%,#1a237e 100%);
+  border:3px solid #b0bec5;border-radius:4px;transform:perspective(400px) rotateX(15deg) rotateY(-10deg);
+  position:relative;box-shadow:0 8px 20px rgba(0,0,0,.2);
+}
+.login-panel::before{
+  content:'';position:absolute;inset:4px;
+  background:
+    linear-gradient(0deg,rgba(255,255,255,.08) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px);
+  background-size:29px 19px;
+}
+.login-panel::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.15) 0%,transparent 50%,rgba(255,255,255,.05) 100%);
+  border-radius:2px;
+}
+.login-panel-stand{
+  width:6px;height:60px;background:linear-gradient(90deg,#78909c,#b0bec5,#78909c);
+  margin:0 auto;border-radius:0 0 3px 3px;
+}
+/* small second panel */
+.login-panel-2{position:absolute;bottom:22vh;right:22%;z-index:2;pointer-events:none;transform:scale(.6);opacity:.7;}
+/* power pole left */
+.login-pole{position:absolute;bottom:25vh;left:8%;z-index:2;pointer-events:none;}
+.login-pole-body{width:6px;height:100px;background:linear-gradient(90deg,#6d4c41,#8d6e63,#6d4c41);margin:0 auto;}
+.login-pole-arm{width:60px;height:4px;background:#6d4c41;position:absolute;top:10px;left:50%;transform:translateX(-50%);border-radius:2px;}
+.login-pole-arm2{width:40px;height:3px;background:#6d4c41;position:absolute;top:24px;left:50%;transform:translateX(-50%);border-radius:2px;}
+.login-pole-wire{
+  position:absolute;top:10px;left:50%;width:200px;height:30px;
+  border-bottom:2px solid #5d4037;border-radius:0 0 50% 50%;transform:translateX(-10px);opacity:.5;
+}
+/* sun rays animation */
+@keyframes sunPulse{
+  0%{transform:scale(1);opacity:.9;}
+  100%{transform:scale(1.1);opacity:1;}
+}
+@keyframes cloudDrift{
+  0%{transform:translateX(0);}
+  100%{transform:translateX(-120vw);}
+}
+/* login box — clean white card */
+.login-box{
+  background:rgba(255,255,255,.92);backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.9);border-radius:16px;
+  padding:44px 40px;width:380px;position:relative;z-index:10;
+  box-shadow:0 10px 40px rgba(0,0,0,.1),0 2px 10px rgba(0,0,0,.05);
+}
+.login-logo{text-align:center;margin-bottom:32px;}
+.login-logo .logo-img{
+  width:160px;height:auto;margin:0 auto 10px;display:block;
+}
+.login-logo h1{color:#1a1a1a;font-size:22px;font-weight:900;letter-spacing:1px;text-transform:uppercase;}
+.login-logo p{color:#64748b;font-size:12.5px;margin-top:4px;font-weight:500;}
+.login-field{margin-bottom:18px;}
+.login-field label{display:block;font-size:11.5px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;}
+.login-field input{
+  width:100%;background:#f1f5f9;border:1.5px solid #e2e8f0;
+  border-radius:10px;padding:13px 16px;color:#1e293b;font-size:14px;outline:none;transition:.2s;
+}
+.login-field input::placeholder{color:#94a3b8;}
+.login-field input:focus{border-color:#f59e0b;background:#fff;box-shadow:0 0 0 3px rgba(245,158,11,.12);}
+.login-err{
+  background:#fef2f2;border:1px solid #fecaca;border-radius:8px;
+  padding:10px 14px;font-size:13px;color:#dc2626;margin-bottom:16px;display:none;
+}
+.btn-login{
+  width:100%;background:linear-gradient(135deg,#f59e0b,#f97316);border:none;border-radius:10px;
+  padding:14px;font-size:15px;font-weight:700;color:white;transition:.3s;margin-top:4px;
+  box-shadow:0 4px 15px rgba(245,158,11,.3);
+}
+.btn-login:hover{background:linear-gradient(135deg,#d97706,#ea580c);transform:translateY(-1px);box-shadow:0 6px 20px rgba(245,158,11,.4);}
+
+/* ─── MAIN LAYOUT ─── */
+#app{display:none;min-height:100vh;}
+.layout{display:flex;min-height:100vh;}
+
+/* ─── SIDEBAR ─── */
+.sidebar{
+  width:240px;display:flex;flex-direction:column;
+  position:fixed;top:0;left:0;height:100vh;z-index:100;
+  background:linear-gradient(180deg,#1a3a5c 0%,#1e5078 40%,#1a6b4a 100%);
+  border-right:none;
+  box-shadow:4px 0 20px rgba(0,0,0,.15);
+}
+.sb-logo{
+  padding:20px 20px 18px;border-bottom:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.05);
+}
+.sb-logo .brand{display:flex;align-items:center;gap:10px;}
+.sb-logo .mark{
+  width:40px;height:40px;border-radius:10px;overflow:hidden;flex-shrink:0;
+  background:white;padding:3px;box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+.sb-logo .mark img{width:100%;height:100%;object-fit:contain;}
+.sb-logo .name{font-size:15px;font-weight:700;color:white;letter-spacing:-.3px;}
+.sb-logo .sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px;}
+.sb-nav{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:4px;}
+.sb-item{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;
+  font-size:13px;font-weight:500;color:rgba(255,255,255,.65);cursor:pointer;transition:.25s;
+  border:none;background:none;width:100%;text-align:left;
+}
+.sb-item:hover{background:rgba(255,255,255,.1);color:white;}
+.sb-item.active{background:rgba(245,158,11,.2);color:#fbbf24;box-shadow:0 2px 8px rgba(245,158,11,.15);}
+.sb-item .icon{font-size:16px;width:20px;text-align:center;}
+.sb-item .badge{
+  margin-left:auto;background:var(--red);color:white;
+  font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;
+}
+.sb-divider{height:1px;background:rgba(255,255,255,.1);margin:10px 0;}
+.sb-user{
+  padding:16px 20px;border-top:1px solid rgba(255,255,255,.1);
+  display:flex;align-items:center;gap:10px;
+  background:rgba(0,0,0,.1);
+}
+.sb-avatar{
+  width:32px;height:32px;background:linear-gradient(135deg,#f59e0b,#ef6c00);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:white;flex-shrink:0;
+  box-shadow:0 2px 8px rgba(245,158,11,.3);
+}
+.sb-uname{font-size:13px;font-weight:600;color:rgba(255,255,255,.9);}
+.sb-urole{font-size:11px;color:rgba(255,255,255,.45);}
+.btn-logout{
+  margin-left:auto;background:rgba(239,68,68,.2);border:none;border-radius:6px;
+  padding:5px 8px;font-size:11px;font-weight:600;color:#fca5a5;cursor:pointer;transition:.2s;
+}
+.btn-logout:hover{background:rgba(239,68,68,.4);}
+
+/* ─── MAIN CONTENT ─── */
+.main{margin-left:240px;flex:1;padding:32px 36px;}
+.page{display:none;}
+.page.active{display:block;}
+
+/* ─── PAGE HEADER ─── */
+.page-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
+.page-hd h2{font-size:22px;font-weight:700;letter-spacing:-.5px;}
+.page-hd p{font-size:13px;color:var(--muted);margin-top:3px;}
+.btn-primary{
+  background:linear-gradient(135deg,#f59e0b,#ef6c00);border:none;border-radius:9px;padding:11px 22px;
+  font-size:13px;font-weight:700;color:white;transition:.25s;display:inline-flex;align-items:center;gap:7px;
+  box-shadow:0 3px 12px rgba(245,158,11,.3);
+}
+.btn-primary:hover{background:linear-gradient(135deg,#d97706,#e65100);transform:translateY(-1px);box-shadow:0 5px 18px rgba(245,158,11,.4);}
+.btn-danger{background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.2);border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;color:var(--red);transition:.2s;}
+.btn-danger:hover{background:rgba(220,38,38,.2);}
+.btn-ghost{background:white;border:1.5px solid #e2e8f0;border-radius:10px;padding:8px 16px;font-size:12px;font-weight:600;color:#475569;transition:.25s;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.btn-ghost:hover{border-color:#94a3b8;color:var(--text);background:#f8fafc;transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.08);}
+
+/* ─── STATS ─── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+.stat-card{
+  background:var(--card);border:none;border-radius:14px;
+  padding:20px 22px;box-shadow:0 2px 12px rgba(0,0,0,.06);
+  position:relative;overflow:hidden;transition:.25s;
+}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.1);}
+.stat-card:nth-child(1){border-left:4px solid #f59e0b;}
+.stat-card:nth-child(2){border-left:4px solid #3b82f6;}
+.stat-card:nth-child(3){border-left:4px solid #ef4444;}
+.stat-card:nth-child(4){border-left:4px solid #10b981;}
+.stat-num{font-size:28px;font-weight:800;letter-spacing:-1px;line-height:1;}
+.stat-card:nth-child(1) .stat-num{color:#d97706;}
+.stat-card:nth-child(2) .stat-num{color:#2563eb;}
+.stat-card:nth-child(3) .stat-num{color:#dc2626;}
+.stat-card:nth-child(4) .stat-num{color:#059669;}
+.stat-lbl{font-size:12px;color:var(--muted);font-weight:500;margin-top:6px;}
+.stat-icon{font-size:22px;margin-bottom:10px;}
+
+/* ─── TABLE ─── */
+.table-card{background:var(--card);border:none;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06);}
+.table-hd{
+  padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.table-hd-title{font-size:14px;font-weight:700;}
+.search-box{
+  border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;
+  font-size:13px;color:var(--text);background:var(--bg);outline:none;width:200px;transition:.2s;
+}
+.search-box:focus{border-color:var(--accent);}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:linear-gradient(135deg,#f0f7ff,#f5f0ff);}
+th{
+  padding:11px 16px;text-align:left;font-size:11px;font-weight:700;
+  color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);
+}
+td{padding:13px 16px;font-size:13px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafbfc;}
+.type-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;
+}
+.type-1{background:#fff7ed;color:#c2410c;}
+.type-2{background:#f0fdf4;color:#15803d;}
+.type-3{background:#eff6ff;color:#1d4ed8;}
+.td-actions{display:flex;gap:6px;align-items:center;}
+.act-btn{
+  border:none;border-radius:7px;padding:6px 10px;font-size:12px;font-weight:600;
+  cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:4px;
+}
+.act-view{background:#f0f9ff;color:#0369a1;}
+.act-view:hover{background:#e0f2fe;}
+.act-print{background:#f0fdf4;color:#15803d;}
+.act-print:hover{background:#dcfce7;}
+.act-pdf{background:#fff7ed;color:#c2410c;}
+.act-pdf:hover{background:#ffedd5;}
+.act-drive{background:#f5f3ff;color:#7c3aed;}
+.act-drive:hover{background:#ede9fe;}
+.act-trash{background:#fef2f2;color:#dc2626;}
+.act-trash:hover{background:#fee2e2;}
+.act-restore{background:#f0fdf4;color:#16a34a;}
+.act-restore:hover{background:#dcfce7;}
+.act-del{background:#fef2f2;color:#dc2626;}
+.act-del:hover{background:#fee2e2;}
+.act-pending{background:#fffbeb;color:#92400e;cursor:not-allowed!important;opacity:.7;}
+.req-approve{background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;}
+.req-approve:hover{background:#dcfce7;}
+.req-reject{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;}
+.req-reject:hover{background:#fee2e2;}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-state .ei{font-size:40px;margin-bottom:12px;}
+
+/* ─── AGREEMENT GRID ─── */
+.agr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;padding:20px;}
+.agr-card{
+  background:white;border-radius:14px;border:1px solid #e8ecf1;
+  overflow:hidden;transition:.25s;position:relative;
+  box-shadow:0 2px 8px rgba(0,0,0,.04);
+}
+.agr-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.1);}
+.agr-card-top{
+  padding:18px 20px 14px;position:relative;
+  border-bottom:1px solid #f1f5f9;
+}
+.agr-card-top::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
+}
+.agr-card.card-type-1 .agr-card-top::before{background:linear-gradient(90deg,#f59e0b,#ef6c00);}
+.agr-card.card-type-2 .agr-card-top::before{background:linear-gradient(90deg,#10b981,#059669);}
+.agr-card.card-type-3 .agr-card-top::before{background:linear-gradient(90deg,#3b82f6,#1d4ed8);}
+.agr-card-num{
+  position:absolute;top:12px;right:16px;font-family:'DM Mono',monospace;
+  font-size:11px;color:var(--muted);background:#f1f5f9;padding:2px 8px;border-radius:5px;
+}
+.agr-card-name{font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px;padding-right:50px;}
+.agr-card-type{display:inline-block;margin-bottom:10px;}
+.agr-card-details{display:flex;gap:20px;flex-wrap:wrap;}
+.agr-card-detail{display:flex;flex-direction:column;gap:2px;}
+.agr-card-detail small{font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:.4px;}
+.agr-card-detail span{font-size:13px;font-weight:600;color:var(--text);}
+.agr-card-actions{
+  padding:12px 20px;display:flex;gap:6px;flex-wrap:wrap;background:#fafbfc;
+}
+.empty-state p{font-size:14px;}
+
+/* ─── DRIVE SETUP ─── */
+.drive-setup{
+  background:linear-gradient(135deg,#eff6ff,#f5f3ff);
+  border:1px solid #ddd6fe;border-radius:12px;padding:16px 20px;
+  margin-bottom:20px;display:flex;align-items:center;gap:14px;
+}
+.drive-setup .di{font-size:22px;}
+.drive-setup p{font-size:13px;color:#4338ca;flex:1;}
+.drive-setup a{font-weight:700;color:#4338ca;text-decoration:underline;cursor:pointer;}
+
+/* ─── STEPS ─── */
+/* ─── STEPS BAR ─── */
+.steps-bar{
+  display:flex;align-items:center;margin-bottom:32px;
+  background:white;border-radius:14px;padding:16px 24px;
+  box-shadow:0 2px 12px rgba(0,0,0,.06);
+}
+.step-it{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--muted);transition:.3s;}
+.step-n{
+  width:34px;height:34px;border-radius:50%;background:#e8ecf1;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;transition:.3s;
+}
+.step-it.active{color:var(--text);}
+.step-it.active .step-n{background:linear-gradient(135deg,#f59e0b,#ef6c00);color:white;box-shadow:0 3px 12px rgba(245,158,11,.35);}
+.step-it.done{color:var(--green);}
+.step-it.done .step-n{background:linear-gradient(135deg,#10b981,#059669);color:white;box-shadow:0 3px 10px rgba(16,185,129,.3);}
+.step-line{flex:1;height:2px;background:#e8ecf1;margin:0 16px;border-radius:2px;position:relative;}
+.step-it.done+.step-line{background:linear-gradient(90deg,#10b981,#34d399);}
+
+/* ─── AGREEMENT TYPE CARDS (select step) ─── */
+#step1 .agr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;padding:0;}
+@media(max-width:700px){#step1 .agr-grid{grid-template-columns:1fr;}}
+#step1 .agr-card{
+  background:var(--card);border:2px solid transparent;border-radius:18px;
+  padding:0;cursor:pointer;transition:.3s;overflow:hidden;
+  box-shadow:0 2px 12px rgba(0,0,0,.06);position:relative;
+}
+#step1 .agr-card:hover{transform:translateY(-4px);box-shadow:0 10px 30px rgba(0,0,0,.12);}
+#step1 .agr-card:nth-child(1):hover{border-color:#f59e0b;}
+#step1 .agr-card:nth-child(2):hover{border-color:#10b981;}
+#step1 .agr-card:nth-child(3):hover{border-color:#3b82f6;}
+.agr-card .card-color-bar{height:5px;width:100%;}
+#step1 .agr-card:nth-child(1) .card-color-bar{background:linear-gradient(90deg,#f59e0b,#ef6c00);}
+#step1 .agr-card:nth-child(2) .card-color-bar{background:linear-gradient(90deg,#10b981,#059669);}
+#step1 .agr-card:nth-child(3) .card-color-bar{background:linear-gradient(90deg,#3b82f6,#1d4ed8);}
+.agr-card .card-body{padding:28px 24px;}
+.agr-card .ico{font-size:36px;margin-bottom:16px;display:block;}
+.agr-card .num{font-size:11px;font-weight:700;color:var(--accent);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;font-family:'DM Mono',monospace;}
+.agr-card .ttl{font-size:17px;font-weight:800;line-height:1.35;color:var(--text);}
+.agr-card .sub{font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.5;}
+.lang-tag{
+  display:inline-block;border-radius:5px;padding:3px 8px;font-size:10px;font-weight:700;margin-right:5px;letter-spacing:.5px;
+}
+#step1 .agr-card:nth-child(1) .lang-tag{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;}
+#step1 .agr-card:nth-child(2) .lang-tag{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;}
+#step1 .agr-card:nth-child(3) .lang-tag{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;}
+.agr-card .card-arrow{
+  display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;
+  color:var(--muted);margin-top:18px;transition:.3s;
+}
+#step1 .agr-card:hover .card-arrow{color:var(--accent);transform:translateX(4px);}
+
+/* ─── FORM ─── */
+.form-card{background:var(--card);border:none;border-radius:18px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08);}
+.form-hd{
+  background:linear-gradient(135deg,#1a3a5c,#1e5078);color:white;
+  padding:22px 28px;display:flex;justify-content:space-between;align-items:center;
+  position:relative;overflow:hidden;
+}
+.form-hd::after{
+  content:'';position:absolute;top:-20px;right:-20px;width:100px;height:100px;
+  background:radial-gradient(circle,rgba(245,158,11,.2),transparent 70%);border-radius:50%;
+}
+.form-hd-t{font-size:16px;font-weight:700;position:relative;z-index:1;}
+.form-hd-b{background:linear-gradient(135deg,#f59e0b,#ef6c00);font-size:11px;font-weight:700;padding:5px 14px;border-radius:20px;letter-spacing:.5px;position:relative;z-index:1;box-shadow:0 2px 8px rgba(245,158,11,.3);}
+.form-bd{padding:30px 28px;}
+.info-note{
+  background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fcd34d;border-radius:12px;
+  padding:14px 18px;font-size:13px;color:#92400e;margin-bottom:28px;
+  display:flex;align-items:center;gap:10px;font-weight:500;
+}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+@media(max-width:580px){.fg{grid-template-columns:1fr;}}
+.fg .full{grid-column:1/-1;}
+.fld{display:flex;flex-direction:column;gap:7px;}
+.fld label{font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.5px;}
+.fld input,.fld select,.fld textarea{
+  border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 14px;
+  font-size:14px;color:var(--text);background:#f8fafc;outline:none;transition:.25s;width:100%;
+}
+.fld input:focus,.fld select:focus,.fld textarea:focus{
+  border-color:#f59e0b;background:white;
+  box-shadow:0 0 0 3px rgba(245,158,11,.12),0 2px 8px rgba(245,158,11,.08);
+}
+.fld textarea{min-height:72px;resize:vertical;}
+.form-ft{
+  padding:20px 28px;border-top:1px solid #f1f5f9;
+  display:flex;justify-content:flex-end;gap:12px;background:#fafbfc;
+}
+
+/* ─── PREVIEW ACTIONS ─── */
+.prev-acts{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;}
+.btn-save{
+  background:linear-gradient(135deg,#f59e0b,#ef6c00);border:none;border-radius:10px;
+  padding:12px 24px;font-size:13px;font-weight:700;color:white;cursor:pointer;transition:.25s;
+  display:inline-flex;align-items:center;gap:7px;box-shadow:0 3px 12px rgba(245,158,11,.3);
+}
+.btn-save:hover{transform:translateY(-1px);box-shadow:0 5px 18px rgba(245,158,11,.4);}
+.btn-prt{
+  background:white;border:1.5px solid #bbf7d0;border-radius:10px;
+  padding:12px 24px;font-size:13px;font-weight:700;color:#15803d;cursor:pointer;transition:.25s;
+  display:inline-flex;align-items:center;gap:7px;box-shadow:0 2px 8px rgba(16,163,127,.08);
+}
+.btn-prt:hover{background:#ecfdf5;transform:translateY(-1px);box-shadow:0 4px 14px rgba(16,163,127,.15);}
+.btn-pdf{background:#fff7ed;border:1px solid #fed7aa;border-radius:9px;padding:11px 22px;font-size:13px;font-weight:700;color:#c2410c;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:7px;}
+.btn-pdf:hover{background:#ffedd5;}
+.btn-drv{background:#e8f4fd;border:1px solid #bfdbf7;border-radius:9px;padding:11px 22px;font-size:13px;font-weight:700;color:#0060b9;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:7px;}
+.btn-drv:hover{background:#d0eaf9;}
+
+/* ════════════════════════════════════════
+   A4 DOCUMENT  — pixel-perfect replicas
+   ════════════════════════════════════════ */
+.doc-wrap{
+  background:white;border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;box-shadow:var(--shadow-lg);
+}
+#doc-render,#doc-render-view{ background:white; }
+
+/* The A4 white page — screen preview */
+.doc-a4{
+  width:794px; min-height:1123px;
+  padding:75px 90px 80px 90px;
+  margin:0 auto;
+  background:white;
+  box-sizing:border-box;
+  font-family:'Times New Roman','Noto Serif',serif;
+  font-size:13.5pt; color:#000;
+}
+@media(max-width:850px){
+  .doc-a4{ width:100%; min-height:unset; padding:40px 30px 60px; }
+}
+
+/* ── AGR-01  English Purchase Agreement ── */
+.eng-title{
+  text-align:center;
+  font-weight:700;
+  font-size:14pt;
+  text-decoration:underline;
+  text-transform:uppercase;
+  letter-spacing:0.3px;
+  margin-bottom:30px;
+}
+.eng-table{ width:100%; border-collapse:collapse; table-layout:fixed; }
+.eng-table colgroup .c-lbl { width:200px; }
+.eng-table colgroup .c-sep { width:28px; }
+.eng-table colgroup .c-val { width:auto; }
+.eng-table td{
+  font-size:12.5pt;
+  padding:6px 0;
+  vertical-align:top;
+  line-height:1.5;
+  font-family:'Times New Roman','Noto Serif',serif;
+  color:#000;
+  border:none;
+}
+.eng-lbl{ }
+.eng-sep{ text-align:left; padding-left:2px; }
+.eng-val{ word-break:break-word; overflow-wrap:break-word; }
+
+/* ── AGR-02 & 03  Malayalam ── */
+.mal-wrap{
+  font-family:'Noto Sans Malayalam',sans-serif;
+  font-size:13pt;
+  color:#000;
+  line-height:1.8;
+}
+.mal-title{
+  text-align:center;
+  font-size:14pt;
+  font-weight:600;
+  margin-bottom:22px;
+  letter-spacing:0.2px;
+}
+.mal-p1{
+  text-align:justify;
+  font-size:13pt;
+  line-height:1.8;
+  word-break:break-word;
+  overflow-wrap:break-word;
+  margin-bottom:0;
+}
+.mal-p2{
+  text-align:justify;
+  font-size:13pt;
+  line-height:1.8;
+  word-break:break-word;
+  overflow-wrap:break-word;
+  margin-top:16px;
+}
+.mal-footer{
+  margin-top:56px;
+  text-align:center;
+  font-size:13pt;
+  line-height:2.6;
+}
+
+/* ─── PRINT ─── */
+@media print{
+  @page{ size:A4 portrait; margin:0; }
+  *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  body{ background:white !important; margin:0; padding:0; }
+  .sidebar,.prev-acts,.steps-bar,.page-hd,.back-btn,
+  #login-screen,.stats-row,.table-card,.drive-setup{ display:none !important; }
+  .page{ display:none !important; }
+  .page.active{ display:block !important; }
+  .main{ margin:0 !important; padding:0 !important; }
+  .layout{ display:block !important; }
+  .doc-wrap{
+    display:block !important;
+    box-shadow:none !important;
+    border:none !important;
+    border-radius:0 !important;
+  }
+  #doc-render,#doc-render-view{
+    width:210mm !important; min-height:297mm !important;
+    margin:0 !important; padding:0 !important;
+  }
+  .doc-a4{
+    width:210mm !important; min-height:297mm !important;
+    padding:18mm 22mm 18mm 22mm !important;
+    margin:0 !important;
+    box-shadow:none !important;
+    page-break-inside:avoid;
+  }
+  .eng-table{ width:100% !important; }
+  .eng-table td, .doc-a4 table td, .doc-a4 table th{ border:none !important; }
+  .mal-p1,.mal-p2{ width:100% !important; }
+}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- ════ LOGIN ════ -->
+<div id="login-screen">
+  <!-- scene elements -->
+  <div class="login-cloud login-cloud-1"></div>
+  <div class="login-cloud login-cloud-2"></div>
+  <div class="login-cloud login-cloud-3"></div>
+  <div class="login-scene">
+    <div class="login-grass-detail"></div>
+  </div>
+  <div class="login-pole"><div class="login-pole-arm"></div><div class="login-pole-arm2"></div><div class="login-pole-wire"></div><div class="login-pole-body"></div></div>
+  <div class="login-panel-group"><div class="login-panel"></div><div class="login-panel-stand"></div></div>
+  <div class="login-panel-2"><div class="login-panel-group"><div class="login-panel"></div><div class="login-panel-stand"></div></div></div>
+  <!-- login card -->
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="logo/logo.png" alt="Golden Ray" class="logo-img">
+      <p>Agreement Management System</p>
+    </div>
+    <div class="login-err" id="login-err">Invalid username or password</div>
+    <div class="login-field">
+      <label>Username</label>
+      <input type="text" id="inp-user" placeholder="Enter username" autocomplete="off">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="inp-pass" placeholder="Enter password">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Sign In →</button>
+  </div>
+</div>
+
+<!-- ════ APP ════ -->
+<div id="app">
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-logo">
+      <div class="brand">
+        <div class="mark"><img src="logo/logo.png" alt="GR"></div>
+        <div>
+          <div class="name">Golden Ray</div>
+          <div class="sub">Agreement System</div>
+        </div>
+      </div>
+    </div>
+    <div class="sb-nav">
+      <button class="sb-item active" id="nav-dash" onclick="navTo('dash')">
+        <span class="icon">📊</span> Dashboard
+      </button>
+      <button class="sb-item" id="nav-new" onclick="navTo('new')">
+        <span class="icon">➕</span> New Agreement
+      </button>
+      <div class="sb-divider"></div>
+      <button class="sb-item" id="nav-trash" onclick="navTo('trash')">
+        <span class="icon">🗑️</span> Trash
+        <span class="badge" id="trash-badge" style="display:none">0</span>
+      </button>
+      <button class="sb-item" id="nav-requests" onclick="navTo('requests')" style="display:none;">
+        <span class="icon">🔔</span> Delete Requests
+        <span class="badge" id="req-badge" style="display:none">0</span>
+      </button>
+    </div>
+    <div class="sb-user">
+      <div class="sb-avatar" id="sb-avatar">C</div>
+      <div>
+        <div class="sb-uname" id="sb-uname">User</div>
+        <div class="sb-urole" id="sb-urole">Golden Ray</div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">Out</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- ── DASHBOARD ── -->
+    <div class="page active" id="page-dash">
+      <div class="page-hd">
+        <div>
+          <h2>Dashboard</h2>
+          <p>All agreements overview</p>
+        </div>
+        <button class="btn-primary" onclick="navTo('new')">➕ New Agreement</button>
+      </div>
+
+      <div class="stats-row" id="stats-row"></div>
+
+      <!-- Zoho WorkDrive notice -->
+      <div class="drive-setup" id="drive-notice" style="background:linear-gradient(135deg,#e8f4fd,#f0f9ff);border:1px solid #bfdbf7;">
+        <div class="di">☁️</div>
+        <p style="color:#0060b9;">Agreements auto-open Zoho WorkDrive for upload. PDF is downloaded first, then folder opens — drag and drop to save.</p>
+        <button class="btn-ghost" style="font-size:12px;" onclick="document.getElementById('drive-notice').style.display='none'">Dismiss</button>
+      </div>
+
+      <div class="table-card">
+        <div class="table-hd">
+          <div class="table-hd-title">All Agreements</div>
+          <input class="search-box" type="text" placeholder="🔍  Search by name..." oninput="filterTable(this.value)">
+        </div>
+        <div id="agr-table-wrap"></div>
+      </div>
+    </div>
+
+    <!-- ── TRASH ── -->
+    <div class="page" id="page-trash">
+      <div class="page-hd">
+        <div><h2>Trash</h2><p>Soft-deleted agreements — restore or permanently delete</p></div>
+      </div>
+      <div class="table-card">
+        <div class="table-hd"><div class="table-hd-title">Trashed Agreements</div></div>
+        <div id="trash-table-wrap"></div>
+      </div>
+    </div>
+
+    <!-- ── DELETE REQUESTS (Admin only) ── -->
+    <div class="page" id="page-requests">
+      <div class="page-hd">
+        <div><h2>🔔 Delete Requests</h2><p>Pending deletion approvals from normal users</p></div>
+      </div>
+      <div class="table-card">
+        <div class="table-hd"><div class="table-hd-title">Pending Requests</div></div>
+        <div id="req-table-wrap"></div>
+      </div>
+    </div>
+
+    <!-- ── NEW AGREEMENT ── -->
+    <div class="page" id="page-new">
+      <div class="page-hd">
+        <div><h2>New Agreement</h2><p>Select type and fill customer details</p></div>
+        <button class="back-btn btn-ghost" onclick="navTo('dash')">← Back</button>
+      </div>
+      <div class="steps-bar">
+        <div class="step-it active" id="st1"><div class="step-n">1</div><span>Select Type</span></div>
+        <div class="step-line"></div>
+        <div class="step-it" id="st2"><div class="step-n">2</div><span>Fill Details</span></div>
+        <div class="step-line"></div>
+        <div class="step-it" id="st3"><div class="step-n">3</div><span>Preview & Save</span></div>
+      </div>
+
+      <!-- Step 1 -->
+      <div id="step1">
+        <div class="agr-grid">
+          <div class="agr-card" onclick="pickType(1)">
+            <div class="card-color-bar"></div>
+            <div class="card-body">
+              <div class="ico">📋</div>
+              <div class="num">AGR – 01</div>
+              <div class="ttl">Purchase Agreement</div>
+              <div class="sub"><span class="lang-tag">ENGLISH</span> Standard solar form</div>
+              <div class="card-arrow">Select this type →</div>
+            </div>
+          </div>
+          <div class="agr-card" onclick="pickType(2)">
+            <div class="card-color-bar"></div>
+            <div class="card-body">
+              <div class="ico">🧾</div>
+              <div class="num">AGR – 02</div>
+              <div class="ttl">Sale Order</div>
+              <div class="sub"><span class="lang-tag">MALAYALAM</span> Standard</div>
+              <div class="card-arrow">Select this type →</div>
+            </div>
+          </div>
+          <div class="agr-card" onclick="pickType(3)">
+            <div class="card-color-bar"></div>
+            <div class="card-body">
+              <div class="ico">🏗️</div>
+              <div class="num">AGR – 03</div>
+              <div class="ttl">Extra Structure Purchase Agreement</div>
+              <div class="sub"><span class="lang-tag">MALAYALAM</span> + Extra structure cost</div>
+              <div class="card-arrow">Select this type →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div id="step2" style="display:none;">
+        <div class="form-card">
+          <div class="form-hd">
+            <div class="form-hd-t" id="form-title"></div>
+            <div class="form-hd-b" id="form-badge"></div>
+          </div>
+          <div class="form-bd">
+            <div class="info-note">💡 Fill the fields below — only these values are inserted into the agreement. All other text stays exactly as in the original.</div>
+            <div class="fg" id="form-fields"></div>
+          </div>
+          <div class="form-ft">
+            <button class="btn-ghost" onclick="goStep(1)">← Back</button>
+            <button class="btn-ghost" onclick="clearFields()">Clear</button>
+            <button class="btn-primary" onclick="goStep(3)">Preview →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div id="step3" style="display:none;">
+        <div class="prev-acts">
+          <button class="btn-save" onclick="saveAgreement()">💾 Save</button>
+          <button class="btn-prt" onclick="printDoc()">🖨️ Print</button>
+          <button class="btn-pdf" onclick="downloadPDF()">📄 Download PDF</button>
+          <button class="btn-drv" onclick="saveToZoho()">☁️ Upload to Zoho Drive</button>
+          <button class="btn-ghost" onclick="goStep(2)">← Edit</button>
+        </div>
+        <div class="doc-wrap">
+          <div id="doc-render"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PREVIEW (from list) ── -->
+    <div class="page" id="page-preview">
+      <div class="page-hd">
+        <div><h2>View Agreement</h2></div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn-prt" onclick="printDoc()">🖨️ Print</button>
+          <button class="btn-pdf" onclick="downloadPDF()">📄 Download PDF</button>
+          <button class="btn-drv" onclick="saveToZoho()">☁️ Upload to Zoho Drive</button>
+          <button class="btn-ghost" onclick="navTo('dash')">← Back</button>
+        </div>
+      </div>
+      <div class="doc-wrap">
+        <div id="doc-render-view"></div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /layout -->
+</div><!-- /app -->
+
+<!-- Zoho WorkDrive: uses share link, no modal needed -->
+
+<script>
+/* ════════════════════════════════
+   STATE
+════════════════════════════════ */
+const USERS = [
+  { user:'crs',   pass:'goldenray@2026', role:'user',  name:'CRS User',    avatar:'C' },
+  { user:'admin', pass:'Admin@2026',     role:'admin', name:'Super Admin', avatar:'A' }
+];
+let currentUser   = null;
+let curType       = null;
+let agreements    = JSON.parse(localStorage.getItem('flarize_agr')   || '[]');
+let trashList     = JSON.parse(localStorage.getItem('flarize_trash') || '[]');
+let deleteRequests= JSON.parse(localStorage.getItem('flarize_dreq')  || '[]');
+const ZOHO_FOLDER_URL = 'https://workdrive.zohoexternal.in/external/f64d28f3ec89466e967ca4ef588fd22fa2451c87f3e1284c6f595729ba4d1479';
+let viewingDoc    = null;
+
+/* ════════════════════════════════
+   LOGIN
+════════════════════════════════ */
+function doLogin(){
+  const u = document.getElementById('inp-user').value.trim().toLowerCase();
+  const p = document.getElementById('inp-pass').value;
+  const err = document.getElementById('login-err');
+  const found = USERS.find(x => x.user===u && x.pass===p);
+  if(found){
+    currentUser = found;
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    err.style.display='none';
+    // Update sidebar user info
+    document.getElementById('sb-avatar').textContent = found.avatar;
+    document.getElementById('sb-uname').textContent  = found.name;
+    document.getElementById('sb-urole').textContent  = found.role==='admin' ? 'Super Admin' : 'Golden Ray';
+    // Show/hide admin nav
+    document.getElementById('nav-requests').style.display = found.role==='admin' ? 'flex' : 'none';
+    renderDash();
+  } else {
+    err.style.display='block';
+    document.getElementById('inp-pass').value='';
+  }
+}
+function doLogout(){
+  currentUser = null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('inp-user').value='';
+  document.getElementById('inp-pass').value='';
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter' && document.getElementById('login-screen').style.display!=='none') doLogin();
+});
+
+/* ════════════════════════════════
+   NAVIGATION
+════════════════════════════════ */
+function navTo(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active'));
+  if(page==='dash'){
+    document.getElementById('page-dash').classList.add('active');
+    document.getElementById('nav-dash').classList.add('active');
+    renderDash();
+  } else if(page==='new'){
+    document.getElementById('page-new').classList.add('active');
+    document.getElementById('nav-new').classList.add('active');
+    goStep(1);
+  } else if(page==='trash'){
+    document.getElementById('page-trash').classList.add('active');
+    document.getElementById('nav-trash').classList.add('active');
+    renderTrash();
+  } else if(page==='requests'){
+    document.getElementById('page-requests').classList.add('active');
+    document.getElementById('nav-requests').classList.add('active');
+    renderRequests();
+  } else if(page==='preview'){
+    document.getElementById('page-preview').classList.add('active');
+  }
+}
+
+/* ════════════════════════════════
+   PERSIST
+════════════════════════════════ */
+function save(){
+  localStorage.setItem('flarize_agr',   JSON.stringify(agreements));
+  localStorage.setItem('flarize_trash', JSON.stringify(trashList));
+  localStorage.setItem('flarize_dreq',  JSON.stringify(deleteRequests));
+  updateTrashBadge();
+  updateReqBadge();
+}
+function updateTrashBadge(){
+  const b=document.getElementById('trash-badge');
+  b.textContent=trashList.length;
+  b.style.display=trashList.length?'inline':'none';
+}
+function updateReqBadge(){
+  const b=document.getElementById('req-badge');
+  if(!b)return;
+  const pending=deleteRequests.filter(r=>r.status==='pending').length;
+  b.textContent=pending;
+  b.style.display=pending?'inline':'none';
+}
+
+/* ════════════════════════════════
+   DASHBOARD
+════════════════════════════════ */
+function renderDash(){
+  // Stats
+  const total=agreements.length;
+  const eng=agreements.filter(a=>a.type===1).length;
+  const mal=agreements.filter(a=>a.type===2||a.type===3).length;
+  const month=agreements.filter(a=>{
+    const d=new Date(a.createdAt);const n=new Date();
+    return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear();
+  }).length;
+  document.getElementById('stats-row').innerHTML=`
+    <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-num">${total}</div><div class="stat-lbl">Total Agreements</div></div>
+    <div class="stat-card"><div class="stat-icon">🗓️</div><div class="stat-num">${month}</div><div class="stat-lbl">This Month</div></div>
+    <div class="stat-card"><div class="stat-icon">🇬🇧</div><div class="stat-num">${eng}</div><div class="stat-lbl">Purchase Agreements</div></div>
+    <div class="stat-card"><div class="stat-icon">🏗️</div><div class="stat-num">${mal}</div><div class="stat-lbl">Malayalam Agreements</div></div>`;
+  renderTable(agreements);
+  updateTrashBadge();
+  updateReqBadge();
+  // Zoho drive notice always visible
+  // Hide New Agreement button for admin if desired (optional — keeping it visible)
+}
+
+function renderTable(list){
+  const wrap=document.getElementById('agr-table-wrap');
+  if(!list.length){
+    wrap.innerHTML=`<div class="empty-state"><div class="ei">📄</div><p>No agreements yet. Create your first one!</p></div>`;
+    return;
+  }
+  wrap.innerHTML=`<div class="agr-grid">${list.map((a,i)=>{
+    const isPending=deleteRequests.find(r=>r.agrId===a.id&&r.status==='pending');
+    const delBtn=currentUser&&currentUser.role==='admin'
+      ? `<button class="act-btn act-trash" onclick="moveToTrash('${a.id}')">🗑️ Delete</button>`
+      : `<button class="act-btn act-trash" onclick="requestDelete('${a.id}')" ${isPending?'disabled style="opacity:.5;cursor:not-allowed;"':''}>${isPending?'⏳ Pending...':'🗑️ Delete'}</button>`;
+    return `<div class="agr-card card-type-${a.type}">
+      <div class="agr-card-top">
+        <div class="agr-card-num">#${String(i+1).padStart(3,'0')}</div>
+        <div class="agr-card-name">${a.customerName||'—'}</div>
+        <span class="type-badge type-${a.type} agr-card-type">${a.typeName}</span>
+        <div class="agr-card-details">
+          <div class="agr-card-detail"><small>Solar Size</small><span>${a.data.kw||'—'}</span></div>
+          <div class="agr-card-detail"><small>Total Cost</small><span>₹ ${fmtNum(a.data.total||a.data.amt||'0')}</span></div>
+          <div class="agr-card-detail"><small>Date</small><span>${fmtDate(a.createdAt)}</span></div>
+        </div>
+      </div>
+      <div class="agr-card-actions">
+        <button class="act-btn act-view" onclick="viewAgr('${a.id}')">👁 View</button>
+        <button class="act-btn act-print" onclick="printAgr('${a.id}')">🖨️</button>
+        <button class="act-btn act-pdf" onclick="pdfAgr('${a.id}')">📄 PDF</button>
+        <button class="act-btn act-drive" onclick="driveAgr('${a.id}')">☁️ Zoho</button>
+        ${delBtn}
+      </div>
+    </div>`}).join('')}</div>`;
+}
+
+function filterTable(q){
+  const filtered=agreements.filter(a=>(a.customerName||'').toLowerCase().includes(q.toLowerCase()));
+  renderTable(filtered);
+}
+
+/* ════════════════════════════════
+   TRASH
+════════════════════════════════ */
+function renderTrash(){
+  const wrap=document.getElementById('trash-table-wrap');
+  if(!trashList.length){
+    wrap.innerHTML=`<div class="empty-state"><div class="ei">🗑️</div><p>Trash is empty.</p></div>`;
+    return;
+  }
+  wrap.innerHTML=`<table>
+    <thead><tr><th>#</th><th>Customer Name</th><th>Type</th><th>Deleted</th><th>Actions</th></tr></thead>
+    <tbody>${trashList.map((a,i)=>`
+    <tr>
+      <td><span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${String(i+1).padStart(3,'0')}</span></td>
+      <td><strong style="color:var(--muted)">${a.customerName||'—'}</strong></td>
+      <td><span class="type-badge type-${a.type}">${a.typeName}</span></td>
+      <td style="color:var(--muted);font-size:12px;">${fmtDate(a.deletedAt)}</td>
+      <td><div class="td-actions">
+        <button class="act-btn act-restore" onclick="restoreAgr('${a.id}')">↩️ Restore</button>
+        <button class="act-btn act-del" onclick="permDelete('${a.id}')">✕ Delete</button>
+      </div></td>
+    </tr>`).join('')}
+    </tbody></table>`;
+}
+
+/* Normal user: request delete */
+function requestDelete(id){
+  const agr = agreements.find(a=>a.id===id);
+  if(!agr) return;
+  const existing = deleteRequests.find(r=>r.agrId===id&&r.status==='pending');
+  if(existing){ toast('⏳ Already pending admin approval'); return; }
+  const req = {
+    id: 'req_'+Date.now(),
+    agrId: id,
+    customerName: agr.customerName,
+    typeName: agr.typeName,
+    requestedBy: currentUser.name,
+    requestedAt: new Date().toISOString(),
+    status: 'pending'
+  };
+  deleteRequests.push(req);
+  save();
+  renderDash();
+  toast('📨 Delete request sent to Super Admin!');
+}
+
+/* Admin: move to trash directly */
+function moveToTrash(id){
+  const idx=agreements.findIndex(a=>a.id===id);
+  if(idx<0)return;
+  const a={...agreements[idx],deletedAt:new Date().toISOString()};
+  trashList.push(a);
+  agreements.splice(idx,1);
+  // remove any pending request for this agreement
+  deleteRequests=deleteRequests.filter(r=>r.agrId!==id);
+  save();
+  renderDash();
+  toast('Moved to trash');
+}
+function restoreAgr(id){
+  const idx=trashList.findIndex(a=>a.id===id);
+  if(idx<0)return;
+  agreements.push(trashList[idx]);
+  trashList.splice(idx,1);
+  save();
+  renderTrash();
+  toast('Agreement restored');
+}
+function permDelete(id){
+  if(!confirm('Permanently delete this agreement? This cannot be undone.'))return;
+  trashList=trashList.filter(a=>a.id!==id);
+  save();
+  renderTrash();
+  toast('Permanently deleted');
+}
+
+/* Admin: approve or reject delete request */
+function approveDelete(reqId){
+  const req = deleteRequests.find(r=>r.id===reqId);
+  if(!req) return;
+  // Move agreement to trash
+  const idx = agreements.findIndex(a=>a.id===req.agrId);
+  if(idx>=0){
+    const a={...agreements[idx], deletedAt:new Date().toISOString(), deletedNote:'Approved by Admin'};
+    trashList.push(a);
+    agreements.splice(idx,1);
+  }
+  deleteRequests = deleteRequests.filter(r=>r.id!==reqId);
+  save();
+  renderRequests();
+  toast('✅ Delete approved — moved to trash');
+}
+function rejectDelete(reqId){
+  const req = deleteRequests.find(r=>r.id===reqId);
+  if(!req) return;
+  deleteRequests = deleteRequests.filter(r=>r.id!==reqId);
+  save();
+  renderRequests();
+  toast('❌ Delete request rejected');
+}
+
+/* Render delete requests page (admin only) */
+function renderRequests(){
+  const wrap=document.getElementById('req-table-wrap');
+  const pending=deleteRequests.filter(r=>r.status==='pending');
+  if(!pending.length){
+    wrap.innerHTML=`<div class="empty-state"><div class="ei">✅</div><p>No pending delete requests.</p></div>`;
+    return;
+  }
+  wrap.innerHTML=`<table>
+    <thead><tr>
+      <th>#</th><th>Customer</th><th>Agreement Type</th>
+      <th>Requested By</th><th>Requested At</th><th>Actions</th>
+    </tr></thead>
+    <tbody>${pending.map((r,i)=>`
+    <tr>
+      <td><span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${String(i+1).padStart(3,'0')}</span></td>
+      <td><strong>${r.customerName||'—'}</strong></td>
+      <td><span class="type-badge type-1">${r.typeName}</span></td>
+      <td>${r.requestedBy}</td>
+      <td style="color:var(--muted);font-size:12px;">${fmtDate(r.requestedAt)}</td>
+      <td><div class="td-actions">
+        <button class="act-btn act-restore" onclick="approveDelete('${r.id}')">✅ Approve</button>
+        <button class="act-btn act-del" onclick="rejectDelete('${r.id}')">❌ Reject</button>
+      </div></td>
+    </tr>`).join('')}
+    </tbody></table>`;
+}
+
+/* ════════════════════════════════
+   FORM CONFIG
+════════════════════════════════ */
+const INVERTERS=['Growatt','Sungrow','SolarEdge','Solaire','DEYE','Deye','PV BLINK','ENPHASE','Solis','Hoymiles','Foxess','Eastman'];
+const PANELS_DCR=[
+  'Waaree - Mono Perc Bifacial - 540 - DCR',
+  'Adani - Mono Perc Bifacial - 550 - DCR',
+  'Adani - Bifacial Topcon Glass to Sheet - 620 - DCR',
+  'Premier Energies - Mono Perc Bifacial - 540 - DCR',
+  'Premier Energies - TopCon Bifacial - 600 - DCR',
+  'Vikram Solar - Mono Perc Bifacial - 540 - DCR',
+  'Renewsys - Mono Perc Bifacial - 545 - DCR',
+  'Rayzon - Mono Perc Bifacial - 545 - DCR',
+  'Panasonic - Mono Perc Bifacial - 540 - DCR',
+  'Axitec - Mono Perc Bifacial - 550 - DCR',
+  'Saatvik Solar - Mono Perc Bifacial - 540 - DCR',
+  'Saatvik Solar - Bifacial Topcon Glass to Glass - 565 - DCR',
+  'Jakson - 570 - DCR',
+  'Renew - Mono Perc Bifacial - 550 - MODEL',
+  'Emmvee - TopCon - 565 - DCR'
+];
+const PANELS_NDCR=[
+  'Waaree - Mono Perc Bifacial - 545 - NDCR',
+  'Waaree - Bifacial Topcon - 575 - NDCR',
+  'Vikram Solar - Mono Perc Bifacial - 550 - NDCR',
+  'Renewsys - Mono Perc Bifacial - 545 - NDCR',
+  'Renewsys - TopCon Bifacial Glass to Glass - 600 - NDCR',
+  'Rayzon - Mono Perc Bifacial - 545 - NDCR',
+  'Panasonic - Mono Perc Bifacial - 550 - NDCR',
+  'Axitec - Bifacial Topcon - 600 - NDCR',
+  'Premier Energies - Mono Perc Bifacial - 545 - NDCR',
+  'Premier Energies - Bifacial Topcon - 590 - NDCR',
+  'Saatvik Solar - Mono Perc Bifacial - 540 - NDCR',
+  'Saatvik Solar - Bifacial Topcon Glass to Glass - 580 - NDCR',
+  'Adani - 620 - NDCR',
+  'Jakson - 570 - NDCR',
+  'Goldi - Bifacial Topcon Glass to Glass - 580 - NDCR',
+  'Emmvee - TopCon - 580 - NDCR',
+  'Renew - TopCon Glass to Glass - 640 - NDCR',
+  'Adani - Bifacial Glass to Glass - 555 - NDCR'
+];
+const ALL_PANELS=['── DCR Panels ──',...PANELS_DCR,'── NDCR Panels ──',...PANELS_NDCR];
+const STRUCTURES=['GI (Galvanized Iron) Structure','GP (Pre Galvanized Pipe) Structure','Hot Dip Galvanized','Aluminium Rails'];
+const FORMS={
+  1:{t:'Purchase Agreement',b:'AGR – 01',fields:[
+    {id:'name',lbl:'Customer Name',type:'text',ph:'e.g. RENJU KRISHNAN'},
+    {id:'phone',lbl:'PH No',type:'text',ph:'e.g. 9633163080'},
+    {id:'address',lbl:'Address',type:'textarea',ph:'Full address including PIN...',full:true},
+    {id:'kw',lbl:'Solar Size',type:'select',opts:['3 KW','4 KW','5 KW','6 KW','8 KW','10 KW']},
+    {id:'panel',lbl:'Solar Panel',type:'select',opts:ALL_PANELS,optgroups:true},
+    {id:'inverter',lbl:'Inverter Brand',type:'select',opts:INVERTERS},
+    {id:'struct',lbl:'Structure Material',type:'select',opts:STRUCTURES},
+    {id:'extra',lbl:'Extra Structure',type:'select',opts:['NO','YES']},
+    {id:'walkway',lbl:'Walk Way',type:'select',opts:['NO','YES']},
+    {id:'lader',lbl:'Lader',type:'select',opts:['NO','YES']},
+    {id:'total',lbl:'Total Cost (₹)',type:'text',ph:'e.g. 215000'},
+  ]},
+  2:{t:'Sale Order',b:'AGR – 02',fields:[
+    {id:'name',lbl:'Customer Name (പേര്)',type:'text',ph:'e.g. SURESH S'},
+    {id:'panel',lbl:'Solar Panel (പാനൽ)',type:'select',opts:ALL_PANELS,optgroups:true},
+    {id:'inverter',lbl:'Inverter Brand',type:'select',opts:INVERTERS},
+    {id:'kw',lbl:'Solar Size',type:'select',opts:['3KW','4KW','5KW','6KW','8KW','10KW']},
+    {id:'amt',lbl:'Amount (₹)',type:'text',ph:'e.g. 335000'},
+  ]},
+  3:{t:'Extra Structure Agreement',b:'AGR – 03',fields:[
+    {id:'name',lbl:'Customer Name (പേര്)',type:'text',ph:'e.g. VIJAYAN'},
+    {id:'panel',lbl:'Solar Panel (പാനൽ)',type:'select',opts:ALL_PANELS,optgroups:true},
+    {id:'inverter',lbl:'Inverter Brand',type:'select',opts:INVERTERS},
+    {id:'kw',lbl:'Solar Size',type:'select',opts:['3 KW','4 KW','5 KW','6 KW','8 KW','10 KW']},
+    {id:'total',lbl:'Base Amount (₹)',type:'text',ph:'e.g. 215000'},
+    {id:'extcost',lbl:'Extra Structure Cost (₹)',type:'text',ph:'e.g. 19500'},
+  ]}
+};
+
+function pickType(n){
+  curType=n;
+  const cfg=FORMS[n];
+  document.getElementById('form-title').textContent=cfg.t;
+  document.getElementById('form-badge').textContent=cfg.b;
+  const cont=document.getElementById('form-fields');
+  cont.innerHTML='';
+  cfg.fields.forEach(f=>{
+    const d=document.createElement('div');
+    d.className='fld'+(f.full?' full':'');
+    let inp='';
+    if(f.type==='select'){
+      let optHtml=f.opts.map(o=>{
+        if(o.startsWith('──')) return `<option disabled style="font-weight:700;color:#1a3a5c;background:#f1f5f9;">  ${o}</option>`;
+        return `<option value="${o}">${o}</option>`;
+      }).join('');
+      inp=`<select id="f_${f.id}"><option value="">-- Select --</option>${optHtml}</select>`;
+    }
+    else if(f.type==='textarea') inp=`<textarea id="f_${f.id}" placeholder="${f.ph}"></textarea>`;
+    else inp=`<input type="text" id="f_${f.id}" placeholder="${f.ph}">`;
+    d.innerHTML=`<label>${f.lbl}</label>${inp}`;
+    cont.appendChild(d);
+  });
+  goStep(2);
+}
+
+function goStep(n){
+  [1,2,3].forEach(i=>{
+    document.getElementById('step'+i).style.display=i===n?'block':'none';
+    const s=document.getElementById('st'+i);
+    s.classList.toggle('active',i===n);
+    s.classList.toggle('done',i<n);
+  });
+  if(n===3) buildDoc(document.getElementById('doc-render'));
+}
+
+function clearFields(){
+  document.querySelectorAll('#form-fields input,#form-fields select,#form-fields textarea').forEach(e=>e.value='');
+}
+
+function v(id){const el=document.getElementById('f_'+id);return el?el.value.trim():'';}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmtNum(s){const n=parseInt((s||'').replace(/,/g,''));return isNaN(n)?s:n.toLocaleString('en-IN');}
+function fmtDate(iso){return new Date(iso).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+
+/* ════════════════════════════════
+   BUILD DOCUMENT HTML
+════════════════════════════════ */
+function buildDoc(container, data){
+  var type = data ? data.type : curType;
+  var d    = data ? data.data : null;
+  var g    = function(id){ return d ? (d[id]||'') : v(id); };
+  var html = '';
+
+  /* ══════════════════════════════════════════════════════════
+     AGR-01  PURCHASE AGREEMENT  (English)
+     Exact match: Sales_oder.pdf
+  ══════════════════════════════════════════════════════════ */
+  if(type===1){
+    var addr = (g('address')||'').replace(/\n/g,'<br>');
+    var rows = [
+      ['NAME',               g('name')          ],
+      ['ADDRESS',            addr               ],
+      ['PH NO',              g('phone')         ],
+      ['SOLAR SIZE',         g('kw')            ],
+      ['PANEL BRAND',        g('panel')         ],
+      ['INVERTER BRAND',     g('inverter')      ],
+      ['STRUCTURE MATERIAL', g('struct')        ],
+      ['EXTRA STRUCTURE',    g('extra')         ],
+      ['WALK WAY',           g('walkway')       ],
+      ['LADER',              g('lader')         ],
+      ['TOTAL COST',         (g('total')||'')+'/'],
+    ];
+    var rows_html = rows.map(function(r){
+      return '<tr>'
+        +'<td class="eng-lbl">'+r[0]+'</td>'
+        +'<td class="eng-sep">&nbsp;:&nbsp;</td>'
+        +'<td class="eng-val">'+(r[1]||'')+'</td>'
+        +'</tr>';
+    }).join('');
+    html = '<div class="doc-a4">'
+      +'<div class="eng-title">PURCHASE AGREEMENT</div>'
+      +'<table class="eng-table">'
+      +'<colgroup><col class="c-lbl"><col class="c-sep"><col class="c-val"></colgroup>'
+      +'<tbody>'+rows_html+'</tbody>'
+      +'</table>'
+      +'</div>';
+
+  /* ══════════════════════════════════════════════════════════
+     AGR-02  SALE ORDER  (Malayalam)
+     Exact match: PURCHASE_AGREEMENT.pdf  (SURESH S format)
+     Paragraph 1 ends at: ...KW-ഓൺഗ്രിഡ്
+     Paragraph 2 starts with space: സോളാർ പവർ...
+  ══════════════════════════════════════════════════════════ */
+  } else if(type===2){
+    var nm  = esc(g('name'))     || '';
+    var pan = esc(g('panel'))    || '';
+    var inv = esc(g('inverter')) || '';
+    var kw  = esc(g('kw'))       || '';
+    var amt = esc(g('amt'))      || '';
+
+    html = '<div class="doc-a4 mal-wrap">'
+      +'<div class="mal-title">പർച്ചേസ് എഗ്രിമെൻ്റ്</div>'
+      +'<div class="mal-p1">'
+      +'മേൽപ്പറഞ്ഞ നിർദ്ദേശത്തിൽ വിവരിച്ചിരിക്കുന്ന നിബന്ധനകൾക്കും വ്യവസ്ഥകൾക്കും '
+      +'അനുസൃതമായി (പേര്) <strong>'+nm+'</strong> എന്ന എൻ്റെ വസതിയിൽ (പാനൽ) <strong>'+pan+'</strong> '
+      +'(ഇൻവെർട്ടർ) <strong>'+inv+'</strong> ഉപയോഗിച്ച് <strong>'+kw+'</strong>-ഓൺഗ്രിഡ്'
+      +'</div>'
+      +'<div class="mal-p2">'
+      +'സോളാർ പവർ പ്ലാൻ്റ് വാങ്ങുന്നതിനും ഇൻസ്റ്റാൾ ചെയ്യുന്നതിനും കമ്മീഷൻ ചെയ്യുന്നതിനും '
+      +'M/s Golden Ray Renewable Energy LLP <strong>₹ '+amt+'</strong> രൂപ നൽകാൻ ഞാൻ '
+      +'സമ്മതിക്കുന്നു.'
+      +'</div>'
+      +'<div class="mal-footer">'
+      +'<div>തീയതി:</div>'
+      +'<div>സ്ഥലം:</div>'
+      +'<div>(ഒപ്പ്)</div>'
+      +'</div>'
+      +'</div>';
+
+  /* ══════════════════════════════════════════════════════════
+     AGR-03  EXTRA STRUCTURE PURCHASE AGREEMENT  (Malayalam)
+     Exact match: EXTRA_STRUTURE_PURCHASE_AGREEMENT.pdf  (VIJAYAN format)
+     Paragraph 1 is one long block including "M/s Golden Ray..."
+     Paragraph 2: roof extra cost
+  ══════════════════════════════════════════════════════════ */
+  } else if(type===3){
+    var nm  = esc(g('name'))     || '';
+    var pan = esc(g('panel'))    || '';
+    var inv = esc(g('inverter')) || '';
+    var kw  = esc(g('kw'))       || '';
+    var amt = esc(g('total'))    || '';
+    var ext = esc(g('extcost'))  || '';
+
+    html = '<div class="doc-a4 mal-wrap">'
+      +'<div class="mal-title">പർച്ചേസ് എഗ്രിമെൻ്റ്</div>'
+      +'<div class="mal-p1">'
+      +'മേൽപ്പറഞ്ഞ നിർദ്ദേശത്തിൽ വിവരിച്ചിരിക്കുന്ന നിബന്ധനകൾക്കും വ്യവസ്ഥകൾക്കും '
+      +'അനുസൃതമായി (പേര്) <strong>'+nm+'</strong> എന്ന എൻ്റെ വസതിയിൽ (പാനൽ) <strong>'+pan+'</strong> '
+      +'(ഇൻവെർട്ടർ) <strong>'+inv+'</strong> ഉപയോഗിച്ച് <strong>'+kw+'</strong> ഓൺ-ഗ്രിഡ് സോളാർ പവർ പ്ലാൻ്റ് '
+      +'വാങ്ങുന്നതിനും ഇൻസ്റ്റാൾ ചെയ്യുന്നതിനും കമ്മീഷൻ ചെയ്യുന്നതിനും M/s Golden Ray '
+      +'Renewable Energy LLP <strong>₹ '+amt+'</strong> രൂപ നൽകാൻ ഞാൻ സമ്മതിക്കുന്നു.'
+      +'</div>'
+      +'<div class="mal-p2">'
+      +'റൂഫിന് മുകളിൽ ഇൻസ്റ്റാൾ ചെയ്യുന്നതിനും, ഉയരം കൂട്ടി ചെയ്യുന്നതിനും അധിക ഘടന ചിലവ് '
+      +'ആവശ്യമാണ്, അധിക ഘടന ചിലവ് <strong>'+ext+'₹</strong> ആണ്.'
+      +'</div>'
+      +'<div class="mal-footer">'
+      +'<div>തീയതി:</div>'
+      +'<div>സ്ഥലം:</div>'
+      +'<div>(ഒപ്പ്)</div>'
+      +'</div>'
+      +'</div>';
+  }
+
+  container.innerHTML = html;
+}
+
+/* ════════════════════════════════
+   SAVE AGREEMENT
+════════════════════════════════ */
+function collectData(){
+  const cfg=FORMS[curType];
+  const data={};
+  cfg.fields.forEach(f=>data[f.id]=v(f.id));
+  return data;
+}
+function saveAgreement(){
+  const d=collectData();
+  const cfg=FORMS[curType];
+  const agr={
+    id:'agr_'+Date.now(),
+    type:curType,
+    typeName:cfg.t,
+    customerName:d.name||'Unknown',
+    data:d,
+    createdAt:new Date().toISOString()
+  };
+  agreements.unshift(agr);
+  save();
+  toast('✅ Agreement saved successfully!');
+}
+
+/* ════════════════════════════════
+   VIEW / PRINT / PDF / DRIVE from list
+════════════════════════════════ */
+function viewAgr(id){
+  const a=agreements.find(x=>x.id===id);
+  if(!a)return;
+  viewingDoc=a;
+  buildDoc(document.getElementById('doc-render-view'),a);
+  navTo('preview');
+}
+function printAgr(id){
+  viewAgr(id);
+  setTimeout(()=>window.print(),400);
+}
+function pdfAgr(id){
+  viewAgr(id);
+  setTimeout(()=>genPDF(document.getElementById('doc-render-view'),agreements.find(x=>x.id===id)),400);
+}
+/* driveAgr defined in Zoho WorkDrive section below */
+
+/* ════════════════════════════════
+   PRINT
+════════════════════════════════ */
+function printDoc(){window.print();}
+
+/* ════════════════════════════════
+   PDF DOWNLOAD
+════════════════════════════════ */
+async function downloadPDF(){
+  // Determine which container to use
+  let container = document.getElementById('doc-render');
+  if(document.getElementById('page-preview').classList.contains('active')){
+    container = document.getElementById('doc-render-view');
+  }
+  await genPDF(container, viewingDoc || {typeName:'Agreement',customerName:'Customer'});
+}
+
+async function genPDF(container, agr){
+  toast('⏳ Generating PDF...');
+  try{
+    const inner = container.firstElementChild || container;
+    // Temporarily set fixed width for clean canvas capture
+    const origW = inner.style.width;
+    inner.style.width = '794px';
+    inner.style.minHeight = '1123px';
+    const canvas = await html2canvas(inner,{
+      scale:2,useCORS:true,backgroundColor:'#ffffff',
+      width:794, height:1123,
+      windowWidth:794,
+      scrollX:0,scrollY:0
+    });
+    inner.style.width = origW;
+    inner.style.minHeight = '';
+    const {jsPDF} = window.jspdf;
+    const pdf = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const imgData = canvas.toDataURL('image/png');
+    // A4 = 210 x 297mm, canvas aspect ratio
+    const pdfW = 210;
+    const pdfH = (canvas.height * pdfW) / canvas.width;
+    // If content overflows 297mm, scale to fit
+    const finalH = Math.min(pdfH, 297);
+    pdf.addImage(imgData,'PNG', 0, 0, pdfW, finalH);
+    const fn=`${(agr&&agr.typeName)||'Agreement'}_${(agr&&agr.customerName)||'Customer'}_${new Date().toISOString().slice(0,10)}.pdf`;
+    pdf.save(fn);
+    toast('✅ PDF downloaded!');
+  }catch(err){
+    toast('❌ PDF failed: '+err.message);
+    console.error(err);
+  }
+}
+
+/* ════════════════════════════════
+   ZOHO WORKDRIVE  (share-link based)
+   Flow: generate PDF → auto-download → open Zoho folder
+════════════════════════════════ */
+
+/* Build filename: CustomerName_AgreementType_Date */
+function buildFileName(agr){
+  const name = (agr && agr.customerName || 'Customer').replace(/[^a-zA-Z0-9ഀ-ൿ ]/g,'').trim().replace(/ +/g,'_');
+  const type = (agr && agr.typeName    || 'Agreement').replace(/ /g,'_');
+  const date = new Date().toISOString().slice(0,10);
+  return name + '_' + type + '_' + date + '.pdf';
+}
+
+/* saveToZoho: called from preview/new-agreement buttons */
+async function saveToZoho(){
+  let container = document.getElementById('doc-render');
+  if(document.getElementById('page-preview').classList.contains('active')){
+    container = document.getElementById('doc-render-view');
+  }
+  const agr = viewingDoc || {typeName:'Agreement', customerName:'Customer'};
+  await zohoUploadFlow(container, agr);
+}
+
+/* driveAgr: called from agreements table ☁️ Zoho button */
+function driveAgr(id){
+  viewAgr(id);
+  setTimeout(async ()=>{
+    const agr = agreements.find(x=>x.id===id);
+    const container = document.getElementById('doc-render-view');
+    await zohoUploadFlow(container, agr);
+  }, 400);
+}
+
+/* Core flow */
+async function zohoUploadFlow(container, agr){
+  toast('⏳ Generating PDF...');
+  try{
+    const inner = container.firstElementChild || container;
+    const origW = inner.style.width;
+    const origH = inner.style.minHeight;
+    inner.style.width    = '794px';
+    inner.style.minHeight= '1123px';
+
+    const canvas = await html2canvas(inner,{
+      scale:2, useCORS:true, backgroundColor:'#ffffff',
+      width:794, height:1123,
+      windowWidth:794, scrollX:0, scrollY:0
+    });
+
+    inner.style.width    = origW;
+    inner.style.minHeight= origH;
+
+    const {jsPDF} = window.jspdf;
+    const pdf = new jsPDF({orientation:'portrait', unit:'mm', format:'a4'});
+    const imgData = canvas.toDataURL('image/png');
+    const pdfW = 210;
+    const pdfH = Math.min((canvas.height * pdfW) / canvas.width, 297);
+    pdf.addImage(imgData,'PNG',0,0,pdfW,pdfH);
+
+    const fileName = buildFileName(agr);
+    pdf.save(fileName);
+
+    // Open Zoho folder after slight delay so download triggers first
+    setTimeout(()=>{
+      window.open(ZOHO_FOLDER_URL, '_blank');
+      toast('✅ PDF downloaded! Drag "' + fileName + '" into the Zoho folder that just opened.');
+    }, 800);
+
+  } catch(err){
+    toast('❌ Failed: ' + err.message);
+    console.error(err);
+  }
+}
+/* ════════════════════════════════
+   TOAST
+════════════════════════════════ */
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+/* ════════════════════════════════
+   INIT
+════════════════════════════════ */
+updateTrashBadge();
+updateReqBadge();
+</script>
+</body>
+</html>
