@@ -523,22 +523,19 @@ tr:hover td{background:#fafbfc;}
   letter-spacing:0.3px;
   margin-bottom:30px;
 }
-.eng-table{ width:100%; border-collapse:collapse; table-layout:fixed; }
-.eng-table colgroup .c-lbl { width:200px; }
-.eng-table colgroup .c-sep { width:28px; }
-.eng-table colgroup .c-val { width:auto; }
+.eng-table{ width:90%; border-collapse:collapse; margin:0 auto; }
 .eng-table td{
   font-size:12.5pt;
-  padding:6px 0;
+  padding:7px 4px;
   vertical-align:top;
-  line-height:1.5;
+  line-height:1.6;
   font-family:'Times New Roman','Noto Serif',serif;
   color:#000;
   border:none;
 }
-.eng-lbl{ }
-.eng-sep{ text-align:left; padding-left:2px; }
-.eng-val{ word-break:break-word; overflow-wrap:break-word; }
+.eng-lbl{ font-weight:700; white-space:nowrap; width:45%; text-align:left; }
+.eng-sep{ width:5%; text-align:center; font-weight:700; }
+.eng-val{ width:50%; word-break:break-word; overflow-wrap:break-word; }
 
 /* ── AGR-02 & 03  Malayalam ── */
 .mal-wrap{
@@ -583,6 +580,16 @@ tr:hover td{background:#fafbfc;}
   font-size:13pt;
   line-height:2.6;
 }
+.agr-sign-section{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:60px;
+  padding:0 40px;
+  font-family:'Times New Roman','Noto Serif',serif;
+  font-size:13pt;
+  line-height:2.4;
+}
+.agr-sign-right{ text-align:left; }
 
 /* ─── PRINT ─── */
 @media print{
@@ -1202,7 +1209,6 @@ const STRUCTURES=['GI (Galvanized Iron) Structure','GP (Pre Galvanized Pipe) Str
 const LANGS=['English','Malayalam','Hindi'];
 const FORMS={
   1:{t:'Purchase Agreement',b:'AGR – 01',fields:[
-    {id:'lang',lbl:'Agreement Language',type:'select',opts:LANGS},
     {id:'name',lbl:'Customer Name',type:'text',ph:'e.g. RENJU KRISHNAN'},
     {id:'phone',lbl:'PH No',type:'text',ph:'e.g. 9633163080'},
     {id:'address',lbl:'Address',type:'textarea',ph:'Full address including PIN...',full:true},
@@ -1217,7 +1223,6 @@ const FORMS={
     {id:'total',lbl:'Total Cost (₹)',type:'text',ph:'e.g. 215000'},
   ]},
   2:{t:'Sale Order',b:'AGR – 02',fields:[
-    {id:'lang',lbl:'Agreement Language',type:'select',opts:LANGS},
     {id:'name',lbl:'Customer Name',type:'text',ph:'e.g. SURESH S'},
     {id:'panel',lbl:'Solar Panel',type:'select',opts:ALL_PANELS,optgroups:true},
     {id:'inverter',lbl:'Inverter Brand',type:'select',opts:INVERTERS},
@@ -1226,7 +1231,6 @@ const FORMS={
     {id:'amt',lbl:'Amount (₹)',type:'text',ph:'e.g. 335000'},
   ]},
   3:{t:'Extra Structure Agreement',b:'AGR – 03',fields:[
-    {id:'lang',lbl:'Agreement Language',type:'select',opts:LANGS},
     {id:'name',lbl:'Customer Name',type:'text',ph:'e.g. VIJAYAN'},
     {id:'panel',lbl:'Solar Panel',type:'select',opts:ALL_PANELS,optgroups:true},
     {id:'inverter',lbl:'Inverter Brand',type:'select',opts:INVERTERS},
@@ -1272,15 +1276,14 @@ function goStep(n){
   });
   if(n===3){
     var pl=document.getElementById('prev-lang');
-    var fl=document.getElementById('f_lang');
-    if(fl&&pl) pl.value=fl.value||'English';
+    if(pl) pl.value=pl.value||'English';
     buildDoc(document.getElementById('doc-render'));
   }
 }
 
 function switchPreviewLang(lang){
-  var fl=document.getElementById('f_lang');
-  if(fl) fl.value=lang;
+  var pl=document.getElementById('prev-lang');
+  if(pl) pl.value=lang;
   buildDoc(document.getElementById('doc-render'));
 }
 
@@ -1329,7 +1332,8 @@ function buildDoc(container, data){
   var type = data ? data.type : curType;
   var d    = data ? data.data : null;
   var g    = function(id){ return d ? (d[id]||'') : v(id); };
-  var lang = g('lang') || 'English';
+  var pl=document.getElementById('prev-lang');
+  var lang = d ? (d.lang||'English') : (pl ? pl.value : 'English');
   var html = '';
 
   /* common variables */
@@ -1348,9 +1352,9 @@ function buildDoc(container, data){
 
   /* footer per language */
   var footer = {
-    'English':'<div class="mal-footer"><div>Date:</div><div>Place:</div><div>(Signature)</div></div>',
-    'Malayalam':'<div class="mal-footer"><div>തീയതി:</div><div>സ്ഥലം:</div><div>(ഒപ്പ്)</div></div>',
-    'Hindi':'<div class="mal-footer"><div>दिनांक:</div><div>स्थान:</div><div>(हस्ताक्षर)</div></div>'
+    'English':'<div class="agr-sign-section"><div class="agr-sign-right"><div>Date:</div><div style="margin-top:14px;">Place:</div><div style="margin-top:14px;">(Signature)</div></div></div>',
+    'Malayalam':'<div class="agr-sign-section"><div class="agr-sign-right"><div>തീയതി:</div><div style="margin-top:14px;">സ്ഥലം:</div><div style="margin-top:14px;">(ഒപ്പ്)</div></div></div>',
+    'Hindi':'<div class="agr-sign-section"><div class="agr-sign-right"><div>दिनांक:</div><div style="margin-top:14px;">स्थान:</div><div style="margin-top:14px;">(हस्ताक्षर)</div></div></div>'
   }[lang];
 
   var wrapClass = lang==='Malayalam' ? 'mal-wrap' : lang==='Hindi' ? 'hin-wrap' : '';
@@ -1364,30 +1368,30 @@ function buildDoc(container, data){
         ['SOLAR SIZE',kw],['PANEL BRAND',pan],['INVERTER BRAND',inv],
         ['INVERTER TYPE',ivtLbl],['STRUCTURE MATERIAL',g('struct')],
         ['EXTRA STRUCTURE',g('extra')],['WALK WAY',g('walkway')],
-        ['LADER',g('lader')],['TOTAL COST',(g('total')||'')+'/']
+        ['LADER',g('lader')],['TOTAL COST','₹ '+(g('total')||'')+'/–']
       ];
-      var rh=rows.map(function(r){return '<tr><td class="eng-lbl">'+r[0]+'</td><td class="eng-sep">&nbsp;:&nbsp;</td><td class="eng-val">'+(r[1]||'')+'</td></tr>';}).join('');
-      html=lhWrap('<div class="eng-title">PURCHASE AGREEMENT</div><table class="eng-table"><colgroup><col class="c-lbl"><col class="c-sep"><col class="c-val"></colgroup><tbody>'+rh+'</tbody></table>');
+      var rh=rows.map(function(r){return '<tr><td class="eng-lbl">'+r[0]+'</td><td class="eng-sep">:</td><td class="eng-val">'+(r[1]||'')+'</td></tr>';}).join('');
+      html=lhWrap('<div class="eng-title">PURCHASE AGREEMENT</div><table class="eng-table"><tbody>'+rh+'</tbody></table>'+footer);
     } else if(lang==='Malayalam'){
       var rows = [
         ['പേര്',g('name')],['വിലാസം',addr],['ഫോൺ നമ്പർ',g('phone')],
         ['സോളാർ സൈസ്',kw],['പാനൽ ബ്രാൻഡ്',pan],['ഇൻവെർട്ടർ ബ്രാൻഡ്',inv],
         ['ഇൻവെർട്ടർ ടൈപ്പ്',ivtLbl],['ഘടന മെറ്റീരിയൽ',g('struct')],
         ['അധിക ഘടന',g('extra')],['വാക്ക് വേ',g('walkway')],
-        ['ലാഡർ',g('lader')],['മൊത്തം ചിലവ്',(g('total')||'')+'/']
+        ['ലാഡർ',g('lader')],['മൊത്തം ചിലവ്','₹ '+(g('total')||'')+'/–']
       ];
-      var rh=rows.map(function(r){return '<tr><td class="eng-lbl">'+r[0]+'</td><td class="eng-sep">&nbsp;:&nbsp;</td><td class="eng-val">'+(r[1]||'')+'</td></tr>';}).join('');
-      html=lhWrap('<div class="mal-wrap"><div class="eng-title">പർച്ചേസ് എഗ്രിമെൻ്റ്</div><table class="eng-table"><colgroup><col class="c-lbl"><col class="c-sep"><col class="c-val"></colgroup><tbody>'+rh+'</tbody></table></div>');
+      var rh=rows.map(function(r){return '<tr><td class="eng-lbl">'+r[0]+'</td><td class="eng-sep">:</td><td class="eng-val">'+(r[1]||'')+'</td></tr>';}).join('');
+      html=lhWrap('<div class="mal-wrap"><div class="eng-title">പർച്ചേസ് എഗ്രിമെൻ്റ്</div><table class="eng-table"><tbody>'+rh+'</tbody></table>'+footer+'</div>');
     } else {
       var rows = [
         ['नाम',g('name')],['पता',addr],['फोन नंबर',g('phone')],
         ['सोलर साइज़',kw],['पैनल ब्रांड',pan],['इन्वर्टर ब्रांड',inv],
         ['इन्वर्टर प्रकार',ivtLbl],['स्ट्रक्चर मटीरियल',g('struct')],
         ['एक्स्ट्रा स्ट्रक्चर',g('extra')],['वॉक वे',g('walkway')],
-        ['लैडर',g('lader')],['कुल लागत',(g('total')||'')+'/']
+        ['लैडर',g('lader')],['कुल लागत','₹ '+(g('total')||'')+'/–']
       ];
-      var rh=rows.map(function(r){return '<tr><td class="eng-lbl">'+r[0]+'</td><td class="eng-sep">&nbsp;:&nbsp;</td><td class="eng-val">'+(r[1]||'')+'</td></tr>';}).join('');
-      html=lhWrap('<div class="hin-wrap"><div class="eng-title">परचेज़ एग्रीमेंट</div><table class="eng-table"><colgroup><col class="c-lbl"><col class="c-sep"><col class="c-val"></colgroup><tbody>'+rh+'</tbody></table></div>');
+      var rh=rows.map(function(r){return '<tr><td class="eng-lbl">'+r[0]+'</td><td class="eng-sep">:</td><td class="eng-val">'+(r[1]||'')+'</td></tr>';}).join('');
+      html=lhWrap('<div class="hin-wrap"><div class="eng-title">परचेज़ एग्रीमेंट</div><table class="eng-table"><tbody>'+rh+'</tbody></table>'+footer+'</div>');
     }
 
   /* ═══ AGR-02  SALE ORDER ═══ */
@@ -1506,6 +1510,8 @@ function collectData(){
   const cfg=FORMS[curType];
   const data={};
   cfg.fields.forEach(f=>data[f.id]=v(f.id));
+  var pl=document.getElementById('prev-lang');
+  data.lang=pl?pl.value:'English';
   return data;
 }
 function saveAgreement(){
