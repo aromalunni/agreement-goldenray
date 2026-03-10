@@ -500,7 +500,7 @@ tr:hover td{background:#fafbfc;}
   font-family:'DM Sans',sans-serif;font-size:10pt;color:#222;
   line-height:1.7;padding:16px 50px 0;
 }
-.lh-body{padding:24px 50px 20px;}
+.lh-body{padding:24px 70px 20px;}
 .lh-footer{
   position:absolute;bottom:0;left:0;right:0;
   height:8px;background:#ef7d1a;
@@ -581,15 +581,13 @@ tr:hover td{background:#fafbfc;}
   line-height:2.6;
 }
 .agr-sign-section{
-  display:flex;
-  justify-content:flex-end;
   margin-top:60px;
-  padding:0 40px;
+  text-align:right;
+  padding-right:60px;
   font-family:'Times New Roman','Noto Serif',serif;
   font-size:13pt;
   line-height:2.4;
 }
-.agr-sign-right{ text-align:left; }
 
 /* ─── PRINT ─── */
 @media print{
@@ -1015,7 +1013,7 @@ function renderTable(list){
         <span class="type-badge type-${a.type} agr-card-type">${a.typeName}</span>
         <div class="agr-card-details">
           <div class="agr-card-detail"><small>Solar Size</small><span>${a.data.kw||'—'}</span></div>
-          <div class="agr-card-detail"><small>Total Cost</small><span>₹ ${fmtNum(a.data.total||a.data.amt||'0')}</span></div>
+          <div class="agr-card-detail"><small>Total Cost</small><span>₹ ${fmtNum(a.data.total||a.data.amt||'0')}${a.data.variant?' ('+a.data.variant+')':''}</span></div>
           <div class="agr-card-detail"><small>Date</small><span>${fmtDate(a.createdAt)}</span></div>
         </div>
       </div>
@@ -1220,6 +1218,7 @@ const FORMS={
     {id:'extra',lbl:'Extra Structure',type:'select',opts:['NO','YES']},
     {id:'walkway',lbl:'Walk Way',type:'select',opts:['NO','YES']},
     {id:'lader',lbl:'Lader',type:'select',opts:['NO','YES']},
+    {id:'variant',lbl:'Variant',type:'select',opts:['Base','Value','Premium']},
     {id:'total',lbl:'Total Cost (₹)',type:'text',ph:'e.g. 215000'},
   ]},
   2:{t:'Sale Order',b:'AGR – 02',fields:[
@@ -1228,6 +1227,7 @@ const FORMS={
     {id:'inverter',lbl:'Inverter Brand',type:'select',opts:INVERTERS},
     {id:'invtype',lbl:'Inverter Type',type:'select',opts:['String Inverter','Micro Inverter']},
     {id:'kw',lbl:'Solar Size',type:'select',opts:['3KW','4KW','5KW','6KW','8KW','10KW']},
+    {id:'variant',lbl:'Variant',type:'select',opts:['Base','Value','Premium']},
     {id:'amt',lbl:'Amount (₹)',type:'text',ph:'e.g. 335000'},
   ]},
   3:{t:'Extra Structure Agreement',b:'AGR – 03',fields:[
@@ -1236,6 +1236,7 @@ const FORMS={
     {id:'inverter',lbl:'Inverter Brand',type:'select',opts:INVERTERS},
     {id:'invtype',lbl:'Inverter Type',type:'select',opts:['String Inverter','Micro Inverter']},
     {id:'kw',lbl:'Solar Size',type:'select',opts:['3 KW','4 KW','5 KW','6 KW','8 KW','10 KW']},
+    {id:'variant',lbl:'Variant',type:'select',opts:['Base','Value','Premium']},
     {id:'total',lbl:'Base Amount (₹)',type:'text',ph:'e.g. 215000'},
     {id:'extcost',lbl:'Extra Structure Cost (₹)',type:'text',ph:'e.g. 19500'},
   ]}
@@ -1368,7 +1369,7 @@ function buildDoc(container, data){
         ['SOLAR SIZE',kw],['PANEL BRAND',pan],['INVERTER BRAND',inv],
         ['INVERTER TYPE',ivtLbl],['STRUCTURE MATERIAL',g('struct')],
         ['EXTRA STRUCTURE',g('extra')],['WALK WAY',g('walkway')],
-        ['LADER',g('lader')],['TOTAL COST','₹ '+(g('total')||'')+'/–']
+        ['LADER',g('lader')],['TOTAL COST','₹ '+(g('total')||'')+'/–'+(g('variant')?' ('+g('variant')+')':'')]
       ];
       var rh=rows.map(function(r){return '<tr><td class="eng-lbl">'+r[0]+'</td><td class="eng-sep">:</td><td class="eng-val">'+(r[1]||'')+'</td></tr>';}).join('');
       html=lhWrap('<div class="eng-title">PURCHASE AGREEMENT</div><table class="eng-table"><tbody>'+rh+'</tbody></table>'+footer);
@@ -1378,7 +1379,7 @@ function buildDoc(container, data){
         ['സോളാർ സൈസ്',kw],['പാനൽ ബ്രാൻഡ്',pan],['ഇൻവെർട്ടർ ബ്രാൻഡ്',inv],
         ['ഇൻവെർട്ടർ ടൈപ്പ്',ivtLbl],['ഘടന മെറ്റീരിയൽ',g('struct')],
         ['അധിക ഘടന',g('extra')],['വാക്ക് വേ',g('walkway')],
-        ['ലാഡർ',g('lader')],['മൊത്തം ചിലവ്','₹ '+(g('total')||'')+'/–']
+        ['ലാഡർ',g('lader')],['മൊത്തം ചിലവ്','₹ '+(g('total')||'')+'/–'+(g('variant')?' ('+g('variant')+')':'')]
       ];
       var rh=rows.map(function(r){return '<tr><td class="eng-lbl">'+r[0]+'</td><td class="eng-sep">:</td><td class="eng-val">'+(r[1]||'')+'</td></tr>';}).join('');
       html=lhWrap('<div class="mal-wrap"><div class="eng-title">പർച്ചേസ് എഗ്രിമെൻ്റ്</div><table class="eng-table"><tbody>'+rh+'</tbody></table>'+footer+'</div>');
@@ -1388,7 +1389,7 @@ function buildDoc(container, data){
         ['सोलर साइज़',kw],['पैनल ब्रांड',pan],['इन्वर्टर ब्रांड',inv],
         ['इन्वर्टर प्रकार',ivtLbl],['स्ट्रक्चर मटीरियल',g('struct')],
         ['एक्स्ट्रा स्ट्रक्चर',g('extra')],['वॉक वे',g('walkway')],
-        ['लैडर',g('lader')],['कुल लागत','₹ '+(g('total')||'')+'/–']
+        ['लैडर',g('lader')],['कुल लागत','₹ '+(g('total')||'')+'/–'+(g('variant')?' ('+g('variant')+')':'')]
       ];
       var rh=rows.map(function(r){return '<tr><td class="eng-lbl">'+r[0]+'</td><td class="eng-sep">:</td><td class="eng-val">'+(r[1]||'')+'</td></tr>';}).join('');
       html=lhWrap('<div class="hin-wrap"><div class="eng-title">परचेज़ एग्रीमेंट</div><table class="eng-table"><tbody>'+rh+'</tbody></table>'+footer+'</div>');
@@ -1405,7 +1406,7 @@ function buildDoc(container, data){
        +'agree to purchase, install and commission a <strong>'+kw+'</strong> On-Grid Solar Power Plant '
        +'at my residence using (Panel) <strong>'+pan+'</strong> '
        +'(Inverter) <strong>'+inv+'</strong> (<strong>'+ivtLbl+'</strong>) '
-       +'by paying M/s Golden Ray Renewable Energy LLP <strong>₹ '+amt+'</strong>.'
+       +'by paying M/s Golden Ray Renewable Energy LLP <strong>₹ '+amt+(g('variant')?' ('+g('variant')+')':'')+'</strong>.'
        +'</div>'
        +footer
       );
@@ -1420,7 +1421,7 @@ function buildDoc(container, data){
        +'</div>'
        +'<div class="mal-p2">'
        +'സോളാർ പവർ പ്ലാൻ്റ് വാങ്ങുന്നതിനും ഇൻസ്റ്റാൾ ചെയ്യുന്നതിനും കമ്മീഷൻ ചെയ്യുന്നതിനും '
-       +'M/s Golden Ray Renewable Energy LLP <strong>₹ '+amt+'</strong> രൂപ നൽകാൻ ഞാൻ '
+       +'M/s Golden Ray Renewable Energy LLP <strong>₹ '+amt+(g('variant')?' ('+g('variant')+')':'')+'</strong> രൂപ നൽകാൻ ഞാൻ '
        +'സമ്മതിക്കുന്നു.'
        +'</div>'
        +footer+'</div>'
@@ -1436,7 +1437,7 @@ function buildDoc(container, data){
        +'</div>'
        +'<div class="mal-p2">'
        +'सोलर पावर प्लांट खरीदने, स्थापित करने और कमीशन करने के लिए '
-       +'M/s Golden Ray Renewable Energy LLP को <strong>₹ '+amt+'</strong> का भुगतान करने पर '
+       +'M/s Golden Ray Renewable Energy LLP को <strong>₹ '+amt+(g('variant')?' ('+g('variant')+')':'')+'</strong> का भुगतान करने पर '
        +'मैं सहमत हूँ।'
        +'</div>'
        +footer+'</div>'
@@ -1455,7 +1456,7 @@ function buildDoc(container, data){
        +'agree to purchase, install and commission a <strong>'+kw+'</strong> On-Grid Solar Power Plant '
        +'at my residence using (Panel) <strong>'+pan+'</strong> '
        +'(Inverter) <strong>'+inv+'</strong> (<strong>'+ivtLbl+'</strong>) '
-       +'by paying M/s Golden Ray Renewable Energy LLP <strong>₹ '+amt+'</strong>.'
+       +'by paying M/s Golden Ray Renewable Energy LLP <strong>₹ '+amt+(g('variant')?' ('+g('variant')+')':'')+'</strong>.'
        +'</div>'
        +'<div style="font-size:12.5pt;line-height:1.8;text-align:justify;margin-top:16px;">'
        +'An additional structure cost is required for installation on the roof and for increasing the height. '
@@ -1472,7 +1473,7 @@ function buildDoc(container, data){
        +'അനുസൃതമായി (പേര്) <strong>'+nm+'</strong> എന്ന എൻ്റെ വസതിയിൽ (പാനൽ) <strong>'+pan+'</strong> '
        +'(ഇൻവെർട്ടർ) <strong>'+inv+'</strong> (<strong>'+ivtLbl+'</strong>) ഉപയോഗിച്ച് <strong>'+kw+'</strong> ഓൺ-ഗ്രിഡ് സോളാർ പവർ പ്ലാൻ്റ് '
        +'വാങ്ങുന്നതിനും ഇൻസ്റ്റാൾ ചെയ്യുന്നതിനും കമ്മീഷൻ ചെയ്യുന്നതിനും M/s Golden Ray '
-       +'Renewable Energy LLP <strong>₹ '+amt+'</strong> രൂപ നൽകാൻ ഞാൻ സമ്മതിക്കുന്നു.'
+       +'Renewable Energy LLP <strong>₹ '+amt+(g('variant')?' ('+g('variant')+')':'')+'</strong> രൂപ നൽകാൻ ഞാൻ സമ്മതിക്കുന്നു.'
        +'</div>'
        +'<div class="mal-p2">'
        +'റൂഫിന് മുകളിൽ ഇൻസ്റ്റാൾ ചെയ്യുന്നതിനും, ഉയരം കൂട്ടി ചെയ്യുന്നതിനും അധിക ഘടന ചിലവ് '
@@ -1489,7 +1490,7 @@ function buildDoc(container, data){
        +'मैं अपने निवास पर (पैनल) <strong>'+pan+'</strong> '
        +'(इन्वर्टर) <strong>'+inv+'</strong> (<strong>'+ivtLbl+'</strong>) का उपयोग करके <strong>'+kw+'</strong> ऑन-ग्रिड सोलर पावर प्लांट '
        +'खरीदने, स्थापित करने और कमीशन करने के लिए M/s Golden Ray '
-       +'Renewable Energy LLP को <strong>₹ '+amt+'</strong> का भुगतान करने पर मैं सहमत हूँ।'
+       +'Renewable Energy LLP को <strong>₹ '+amt+(g('variant')?' ('+g('variant')+')':'')+'</strong> का भुगतान करने पर मैं सहमत हूँ।'
        +'</div>'
        +'<div class="mal-p2">'
        +'छत पर स्थापित करने और ऊँचाई बढ़ाने के लिए अतिरिक्त संरचना लागत आवश्यक है। '
