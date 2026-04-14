@@ -147,6 +147,86 @@ input,select,textarea{font-family:var(--font);}
 }
 .btn-login:hover{background:linear-gradient(135deg,#d97706,#ea580c);transform:translateY(-1px);box-shadow:0 6px 20px rgba(245,158,11,.4);}
 
+/* ─── VISHU FESTIVE OVERLAY ─── */
+.vishu-banner{
+  position:absolute;top:24px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,#f59e0b,#fbbf24,#f59e0b);
+  color:#7c2d12;padding:10px 28px;border-radius:40px;
+  font-weight:800;font-size:14px;letter-spacing:.5px;
+  box-shadow:0 6px 24px rgba(245,158,11,.5),inset 0 1px 0 rgba(255,255,255,.6);
+  border:2px solid #fcd34d;z-index:10;white-space:nowrap;
+  animation:vishuGlow 2.5s ease-in-out infinite;
+}
+@keyframes vishuGlow{
+  0%,100%{box-shadow:0 6px 24px rgba(245,158,11,.5),inset 0 1px 0 rgba(255,255,255,.6);}
+  50%{box-shadow:0 8px 32px rgba(245,158,11,.8),0 0 40px rgba(251,191,36,.6),inset 0 1px 0 rgba(255,255,255,.6);}
+}
+.vishu-krishna{
+  position:absolute;top:70px;right:6%;z-index:3;font-size:70px;
+  filter:drop-shadow(0 4px 12px rgba(0,0,0,.25));
+  animation:krishnaFloat 4s ease-in-out infinite;
+}
+@keyframes krishnaFloat{
+  0%,100%{transform:translateY(0) rotate(-3deg);}
+  50%{transform:translateY(-12px) rotate(3deg);}
+}
+.vishu-krishna-label{
+  position:absolute;top:150px;right:6%;z-index:3;
+  font-size:11px;font-weight:700;color:#7c2d12;
+  background:rgba(253,224,71,.9);padding:3px 10px;border-radius:20px;
+  border:1px solid #f59e0b;
+}
+.vishu-peacock{
+  position:absolute;top:100px;left:6%;z-index:3;font-size:48px;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.2));
+  animation:peacockSway 5s ease-in-out infinite;
+}
+@keyframes peacockSway{
+  0%,100%{transform:rotate(-8deg);}
+  50%{transform:rotate(8deg);}
+}
+.konna-flower{
+  position:absolute;font-size:22px;top:-40px;z-index:2;
+  animation:konnaFall linear infinite;
+  filter:drop-shadow(0 2px 4px rgba(217,119,6,.3));
+  pointer-events:none;
+}
+@keyframes konnaFall{
+  0%{transform:translateY(-40px) rotate(0deg);opacity:0;}
+  10%{opacity:1;}
+  90%{opacity:1;}
+  100%{transform:translateY(100vh) rotate(360deg);opacity:0;}
+}
+.konna-1{left:8%;animation-duration:9s;animation-delay:0s;}
+.konna-2{left:18%;animation-duration:11s;animation-delay:1.5s;}
+.konna-3{left:28%;animation-duration:8s;animation-delay:3s;font-size:18px;}
+.konna-4{left:38%;animation-duration:10s;animation-delay:0.5s;}
+.konna-5{left:48%;animation-duration:12s;animation-delay:2s;font-size:26px;}
+.konna-6{left:58%;animation-duration:9s;animation-delay:4s;}
+.konna-7{left:68%;animation-duration:11s;animation-delay:1s;font-size:20px;}
+.konna-8{left:78%;animation-duration:10s;animation-delay:2.5s;}
+.konna-9{left:88%;animation-duration:8.5s;animation-delay:3.5s;font-size:24px;}
+.konna-10{left:14%;animation-duration:10.5s;animation-delay:5s;font-size:19px;}
+.konna-11{left:34%;animation-duration:9.5s;animation-delay:6s;}
+.konna-12{left:54%;animation-duration:11s;animation-delay:4.5s;}
+.konna-13{left:74%;animation-duration:10s;animation-delay:5.5s;font-size:21px;}
+.konna-14{left:92%;animation-duration:9s;animation-delay:7s;}
+.vishu-footer-greet{
+  position:absolute;bottom:24px;left:50%;transform:translateX(-50%);
+  font-size:12px;color:#7c2d12;font-weight:600;
+  background:rgba(255,255,255,.85);padding:8px 20px;border-radius:20px;
+  border:1px solid #fcd34d;z-index:3;
+  text-align:center;
+}
+.vishu-footer-greet .malayalam{
+  display:block;font-size:14px;font-weight:800;color:#b45309;margin-bottom:2px;
+}
+@media(max-width:700px){
+  .vishu-krishna{font-size:50px;top:60px;}
+  .vishu-peacock{font-size:36px;top:80px;}
+  .vishu-krishna-label{top:120px;}
+}
+
 /* ─── MAIN LAYOUT ─── */
 #app{display:none;min-height:100vh;}
 .layout{display:flex;min-height:100vh;}
@@ -634,6 +714,30 @@ tr:hover td{background:#fafbfc;}
 
 <!-- ════ LOGIN ════ -->
 <div id="login-screen">
+  <!-- ── Vishu festive overlay ── -->
+  <div class="vishu-banner">🌼 Happy Vishu 2026 🌼</div>
+  <div class="vishu-krishna">🪈</div>
+  <div class="vishu-krishna-label">Sree Krishna</div>
+  <div class="vishu-peacock">🦚</div>
+  <!-- Kanikonna flowers falling -->
+  <div class="konna-flower konna-1">🌼</div>
+  <div class="konna-flower konna-2">🌼</div>
+  <div class="konna-flower konna-3">🌼</div>
+  <div class="konna-flower konna-4">🌼</div>
+  <div class="konna-flower konna-5">🌼</div>
+  <div class="konna-flower konna-6">🌼</div>
+  <div class="konna-flower konna-7">🌼</div>
+  <div class="konna-flower konna-8">🌼</div>
+  <div class="konna-flower konna-9">🌼</div>
+  <div class="konna-flower konna-10">🌼</div>
+  <div class="konna-flower konna-11">🌼</div>
+  <div class="konna-flower konna-12">🌼</div>
+  <div class="konna-flower konna-13">🌼</div>
+  <div class="konna-flower konna-14">🌼</div>
+  <div class="vishu-footer-greet">
+    <span class="malayalam">വിഷു ആശംസകൾ</span>
+    Kanikonna blessings to you & your family
+  </div>
   <!-- scene elements -->
   <div class="login-cloud login-cloud-1"></div>
   <div class="login-cloud login-cloud-2"></div>
