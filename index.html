@@ -885,6 +885,7 @@ let curType       = null;
 let agreements    = JSON.parse(localStorage.getItem('flarize_agr')   || '[]');
 let trashList     = JSON.parse(localStorage.getItem('flarize_trash') || '[]');
 let deleteRequests= JSON.parse(localStorage.getItem('flarize_dreq')  || '[]');
+try { archiveOldAgreements && archiveOldAgreements(); } catch(e){}
 const ZOHO_FOLDER_URL = 'https://workdrive.zohoexternal.in/external/f64d28f3ec89466e967ca4ef588fd22fa2451c87f3e1284c6f595729ba4d1479';
 let viewingDoc    = null;
 
@@ -1000,34 +1001,48 @@ function renderDash(){
 
 function renderTable(list){
   const wrap=document.getElementById('agr-table-wrap');
-  if(!list.length){
+  if(!wrap) return;
+  if(!list || !list.length){
     wrap.innerHTML=`<div class="empty-state"><div class="ei">📄</div><p>No agreements yet. Create your first one!</p></div>`;
     return;
   }
-  wrap.innerHTML=`<div class="agr-grid">${list.map((a,i)=>{
-    const isPending=deleteRequests.find(r=>r.agrId===a.id&&r.status==='pending');
-    const delBtn=currentUser&&currentUser.role==='admin'
-      ? `<button class="act-btn act-trash" onclick="moveToTrash('${a.id}')">🗑️ Delete</button>`
-      : `<button class="act-btn act-trash" onclick="requestDelete('${a.id}')" ${isPending?'disabled style="opacity:.5;cursor:not-allowed;"':''}>${isPending?'⏳ Pending...':'🗑️ Delete'}</button>`;
-    return `<div class="agr-card card-type-${a.type}">
-      <div class="agr-card-top">
-        <div class="agr-card-num">#${String(i+1).padStart(3,'0')}</div>
-        <div class="agr-card-name">${a.customerName||'—'}</div>
-        <span class="type-badge type-${a.type} agr-card-type">${a.typeName}</span>
-        <div class="agr-card-details">
-          <div class="agr-card-detail"><small>Solar Size</small><span>${a.data.kw||'—'}</span></div>
-          <div class="agr-card-detail"><small>Total Cost</small><span>₹ ${fmtNum(a.data.total||a.data.amt||'0')}${a.data.variant?' ('+a.data.variant+')':''}</span></div>
-          <div class="agr-card-detail"><small>Date</small><span>${fmtDate(a.createdAt)}</span></div>
+  try {
+    wrap.innerHTML=`<div class="agr-grid">${list.map((a,i)=>{
+      const d=a.data||{};
+      const kw=a.kw||d.kw||'—';
+      const cost=fmtNum(a.total||a.amt||d.total||d.amt||'0');
+      const variant=a.variant||d.variant||'';
+      const isArchived=!!a.archived||!a.data;
+      const isPending=deleteRequests.find(r=>r.agrId===a.id&&r.status==='pending');
+      const delBtn=currentUser&&currentUser.role==='admin'
+        ? `<button class="act-btn act-trash" onclick="moveToTrash('${a.id}')">🗑️ Delete</button>`
+        : `<button class="act-btn act-trash" onclick="requestDelete('${a.id}')" ${isPending?'disabled style="opacity:.5;cursor:not-allowed;"':''}>${isPending?'⏳ Pending...':'🗑️ Delete'}</button>`;
+      const actionBtns=isArchived
+        ? `<span style="color:#94a3b8;font-size:11px;font-style:italic;padding:6px 2px;flex:1;">📦 Archived — view/print/PDF unavailable</span>${delBtn}`
+        : `<button class="act-btn act-view" onclick="viewAgr('${a.id}')">👁 View</button>
+           <button class="act-btn act-print" onclick="printAgr('${a.id}')">🖨️</button>
+           <button class="act-btn act-pdf" onclick="pdfAgr('${a.id}')">📄 PDF</button>
+           <button class="act-btn act-drive" onclick="driveAgr('${a.id}')">☁️ Zoho</button>
+           ${delBtn}`;
+      return `<div class="agr-card card-type-${a.type||1}"${isArchived?' style="opacity:.85;"':''}>
+        <div class="agr-card-top">
+          <div class="agr-card-num">#${String(i+1).padStart(3,'0')}${isArchived?' · ARCHIVED':''}</div>
+          <div class="agr-card-name">${a.customerName||'—'}</div>
+          <span class="type-badge type-${a.type||1} agr-card-type">${a.typeName||'Agreement'}</span>
+          <div class="agr-card-details">
+            <div class="agr-card-detail"><small>Solar Size</small><span>${kw}</span></div>
+            <div class="agr-card-detail"><small>Total Cost</small><span>₹ ${cost}${variant?' ('+variant+')':''}</span></div>
+            <div class="agr-card-detail"><small>Date</small><span>${a.createdAt?fmtDate(a.createdAt):'—'}</span></div>
+          </div>
         </div>
-      </div>
-      <div class="agr-card-actions">
-        <button class="act-btn act-view" onclick="viewAgr('${a.id}')">👁 View</button>
-        <button class="act-btn act-print" onclick="printAgr('${a.id}')">🖨️</button>
-        <button class="act-btn act-pdf" onclick="pdfAgr('${a.id}')">📄 PDF</button>
-        <button class="act-btn act-drive" onclick="driveAgr('${a.id}')">☁️ Zoho</button>
-        ${delBtn}
-      </div>
-    </div>`}).join('')}</div>`;
+        <div class="agr-card-actions">
+          ${actionBtns}
+        </div>
+      </div>`}).join('')}</div>`;
+  } catch(e) {
+    console.error('renderTable error:',e);
+    wrap.innerHTML=`<div class="empty-state"><div class="ei">⚠️</div><p>Error rendering list: ${e.message}</p></div>`;
+  }
 }
 
 function filterTable(q){
@@ -1552,12 +1567,35 @@ function saveAgreement(){
     type:curType,
     typeName:cfg.t,
     customerName:d.name||'Unknown',
+    kw:d.kw||'',
+    total:d.total||'',
+    amt:d.amt||'',
+    variant:d.variant||'',
     data:d,
     createdAt:new Date().toISOString()
   };
   agreements.unshift(agr);
+  archiveOldAgreements();
   save();
   toast('✅ Agreement saved successfully!');
+  navTo('dash');
+}
+
+/* Keep full data only for the 10 most recent. Older entries are archived:
+   metadata stays for history display, but heavy `data` field is dropped. */
+function archiveOldAgreements(){
+  const LIMIT=10;
+  for(let i=0;i<agreements.length;i++){
+    const a=agreements[i];
+    if(i>=LIMIT && a.data){
+      if(!a.kw)      a.kw      = a.data.kw      || '';
+      if(!a.total)   a.total   = a.data.total   || '';
+      if(!a.amt)     a.amt     = a.data.amt     || '';
+      if(!a.variant) a.variant = a.data.variant || '';
+      delete a.data;
+      a.archived=true;
+    }
+  }
 }
 
 /* ════════════════════════════════
@@ -1566,6 +1604,7 @@ function saveAgreement(){
 function viewAgr(id){
   const a=agreements.find(x=>x.id===id);
   if(!a)return;
+  if(a.archived||!a.data){ toast('📦 This agreement is archived — full document no longer available'); return; }
   viewingDoc=a;
   buildDoc(document.getElementById('doc-render-view'),a);
   navTo('preview');
