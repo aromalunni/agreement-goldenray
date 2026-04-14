@@ -730,7 +730,7 @@ tr:hover td{background:#fafbfc;}
       <div class="table-card">
         <div class="table-hd">
           <div class="table-hd-title">All Agreements</div>
-          <input class="search-box" type="text" placeholder="🔍  Search by name..." oninput="filterTable(this.value)">
+          <input class="search-box" type="text" placeholder="🔍  Search by name, phone, type, panel, inverter..." oninput="filterTable(this.value)">
         </div>
         <div id="agr-table-wrap"></div>
       </div>
@@ -742,7 +742,10 @@ tr:hover td{background:#fafbfc;}
         <div><h2>Trash</h2><p>Soft-deleted agreements — restore or permanently delete</p></div>
       </div>
       <div class="table-card">
-        <div class="table-hd"><div class="table-hd-title">Trashed Agreements</div></div>
+        <div class="table-hd">
+          <div class="table-hd-title">Trashed Agreements</div>
+          <input class="search-box" type="text" placeholder="🔍  Search by name, type..." oninput="filterTrash(this.value)">
+        </div>
         <div id="trash-table-wrap"></div>
       </div>
     </div>
@@ -1028,22 +1031,29 @@ function renderTable(list){
 }
 
 function filterTable(q){
-  const filtered=agreements.filter(a=>(a.customerName||'').toLowerCase().includes(q.toLowerCase()));
+  const s=(q||'').toLowerCase().trim();
+  if(!s){renderTable(agreements);return;}
+  const filtered=agreements.filter(a=>{
+    const d=a.data||{};
+    const hay=[a.customerName,a.typeName,d.phone,d.kw,d.panel,d.inverter,d.variant,d.address,d.total,d.amt].filter(Boolean).join(' ').toLowerCase();
+    return hay.includes(s);
+  });
   renderTable(filtered);
 }
 
 /* ════════════════════════════════
    TRASH
 ════════════════════════════════ */
-function renderTrash(){
+function renderTrash(list){
   const wrap=document.getElementById('trash-table-wrap');
-  if(!trashList.length){
+  const data=list||trashList;
+  if(!data.length){
     wrap.innerHTML=`<div class="empty-state"><div class="ei">🗑️</div><p>Trash is empty.</p></div>`;
     return;
   }
   wrap.innerHTML=`<table>
     <thead><tr><th>#</th><th>Customer Name</th><th>Type</th><th>Deleted</th><th>Actions</th></tr></thead>
-    <tbody>${trashList.map((a,i)=>`
+    <tbody>${data.map((a,i)=>`
     <tr>
       <td><span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${String(i+1).padStart(3,'0')}</span></td>
       <td><strong style="color:var(--muted)">${a.customerName||'—'}</strong></td>
@@ -1055,6 +1065,16 @@ function renderTrash(){
       </div></td>
     </tr>`).join('')}
     </tbody></table>`;
+}
+
+function filterTrash(q){
+  const s=(q||'').toLowerCase().trim();
+  if(!s){renderTrash();return;}
+  const filtered=trashList.filter(a=>{
+    const hay=[a.customerName,a.typeName].filter(Boolean).join(' ').toLowerCase();
+    return hay.includes(s);
+  });
+  renderTrash(filtered);
 }
 
 /* Normal user: request delete */
@@ -1164,13 +1184,14 @@ function renderRequests(){
 /* ════════════════════════════════
    FORM CONFIG
 ════════════════════════════════ */
-const INVERTERS=['Growatt','Sungrow','SolarEdge','Solaire','DEYE','Deye','PV BLINK','ENPHASE','Solis','Hoymiles','Foxess','Eastman'];
+const INVERTERS=['Growatt','Sungrow','SolarEdge','Solaire','DEYE','Deye','PV BLINK','ENPHASE','Solis','Hoymiles','Foxess','Eastman','Premier'];
 const PANELS_DCR=[
   'Waaree - Mono Perc Bifacial - 540 - DCR',
   'Adani - Mono Perc Bifacial - 550 - DCR',
   'Adani - Bifacial Topcon Glass to Sheet - 620 - DCR',
   'Premier Energies - Mono Perc Bifacial - 540 - DCR',
   'Premier Energies - TopCon Bifacial - 600 - DCR',
+  'Premier Energies - Topcon Bifacial - 610 - DCR',
   'Vikram Solar - Mono Perc Bifacial - 540 - DCR',
   'Renewsys - Mono Perc Bifacial - 545 - DCR',
   'Rayzon - Mono Perc Bifacial - 545 - DCR',
@@ -1212,8 +1233,8 @@ const FORMS={
     {id:'address',lbl:'Address',type:'textarea',ph:'Full address including PIN...',full:true},
     {id:'kw',lbl:'Solar Size',type:'select',opts:['3 KW','4 KW','5 KW','6 KW','8 KW','10 KW']},
     {id:'phase',lbl:'Phase',type:'select',opts:['Single Phase','3 Phase']},
-    {id:'panel',lbl:'Solar Panel',type:'select',opts:ALL_PANELS,optgroups:true},
-    {id:'inverter',lbl:'Inverter Brand',type:'select',opts:INVERTERS},
+    {id:'panel',lbl:'Solar Panel',type:'select',opts:ALL_PANELS,optgroups:true,searchable:true},
+    {id:'inverter',lbl:'Inverter Brand',type:'select',opts:INVERTERS,searchable:true},
     {id:'invtype',lbl:'Inverter Type',type:'select',opts:['String Inverter','Micro Inverter']},
     {id:'struct',lbl:'Structure Material',type:'select',opts:STRUCTURES},
     {id:'extra',lbl:'Extra Structure',type:'select',opts:['NO','YES']},
@@ -1224,8 +1245,8 @@ const FORMS={
   ]},
   2:{t:'Sale Order',b:'AGR – 02',fields:[
     {id:'name',lbl:'Customer Name',type:'text',ph:'e.g. SURESH S'},
-    {id:'panel',lbl:'Solar Panel',type:'select',opts:ALL_PANELS,optgroups:true},
-    {id:'inverter',lbl:'Inverter Brand',type:'select',opts:INVERTERS},
+    {id:'panel',lbl:'Solar Panel',type:'select',opts:ALL_PANELS,optgroups:true,searchable:true},
+    {id:'inverter',lbl:'Inverter Brand',type:'select',opts:INVERTERS,searchable:true},
     {id:'invtype',lbl:'Inverter Type',type:'select',opts:['String Inverter','Micro Inverter']},
     {id:'kw',lbl:'Solar Size',type:'select',opts:['3KW','4KW','5KW','6KW','8KW','10KW']},
     {id:'phase',lbl:'Phase',type:'select',opts:['Single Phase','3 Phase']},
@@ -1234,8 +1255,8 @@ const FORMS={
   ]},
   3:{t:'Extra Structure Agreement',b:'AGR – 03',fields:[
     {id:'name',lbl:'Customer Name',type:'text',ph:'e.g. VIJAYAN'},
-    {id:'panel',lbl:'Solar Panel',type:'select',opts:ALL_PANELS,optgroups:true},
-    {id:'inverter',lbl:'Inverter Brand',type:'select',opts:INVERTERS},
+    {id:'panel',lbl:'Solar Panel',type:'select',opts:ALL_PANELS,optgroups:true,searchable:true},
+    {id:'inverter',lbl:'Inverter Brand',type:'select',opts:INVERTERS,searchable:true},
     {id:'invtype',lbl:'Inverter Type',type:'select',opts:['String Inverter','Micro Inverter']},
     {id:'kw',lbl:'Solar Size',type:'select',opts:['3 KW','4 KW','5 KW','6 KW','8 KW','10 KW']},
     {id:'phase',lbl:'Phase',type:'select',opts:['Single Phase','3 Phase']},
@@ -1257,11 +1278,16 @@ function pickType(n){
     d.className='fld'+(f.full?' full':'');
     let inp='';
     if(f.type==='select'){
-      let optHtml=f.opts.map(o=>{
-        if(o.startsWith('──')) return `<option disabled style="font-weight:700;color:#1a3a5c;background:#f1f5f9;">  ${o}</option>`;
-        return `<option value="${o}">${o}</option>`;
-      }).join('');
-      inp=`<select id="f_${f.id}"><option value="">-- Select --</option>${optHtml}</select>`;
+      if(f.searchable){
+        let optHtml=f.opts.filter(o=>!o.startsWith('──')).map(o=>`<option value="${o}">`).join('');
+        inp=`<input type="text" id="f_${f.id}" list="dl_${f.id}" placeholder="Type to search..." autocomplete="off"><datalist id="dl_${f.id}">${optHtml}</datalist>`;
+      } else {
+        let optHtml=f.opts.map(o=>{
+          if(o.startsWith('──')) return `<option disabled style="font-weight:700;color:#1a3a5c;background:#f1f5f9;">  ${o}</option>`;
+          return `<option value="${o}">${o}</option>`;
+        }).join('');
+        inp=`<select id="f_${f.id}"><option value="">-- Select --</option>${optHtml}</select>`;
+      }
     }
     else if(f.type==='textarea') inp=`<textarea id="f_${f.id}" placeholder="${f.ph}"></textarea>`;
     else inp=`<input type="text" id="f_${f.id}" placeholder="${f.ph}">`;
